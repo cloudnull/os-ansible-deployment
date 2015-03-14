@@ -1,9 +1,9 @@
-OpenStack rsyslog server
+OpenStack rsyslog client
 ########################
 :tags: openstack, rsyslog, server, cloud, ansible
 :category: \*nix
 
-Role to deploy rsyslog for use within OpenStack when deploying services using containers. 
+Role to deploy rsyslog for use within OpenStack.
 
 .. code-block:: yaml
 
@@ -11,4 +11,4 @@ Role to deploy rsyslog for use within OpenStack when deploying services using co
       hosts: rsyslog
       user: root
       roles:
-        - { role: "rsyslog_setup", tags: [ "rsyslog-setup" ] }
+        - { role: "rsyslog_client", tags: [ "rsyslog-client" ] }

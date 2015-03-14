@@ -13,20 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-galaxy_info:
-  author: rcbops
-  description: Rsyslog install and setup for logstash
-  company: Rackspace
-  license: Apache2
-  min_ansible_version: 1.6.6
-  platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
-  categories:
-    - cloud
-    - rsyslog
-    - development
-    - openstack
-dependencies:
-  - pip_lock_down
+- name: Rsyslog apt repository
+  apt_repository:
+    repo: "{{ item.repo }}"
+    state: "{{ item.state }}"
+  with_items: rsyslog_client_apt_repos
+  register: add_repos
+  until: add_repos|success
+  retries: 5
+  delay: 2
+  tags:
+    - rsyslog-client-apt-repositories
+
+- name: Install rsyslog packages
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+    cache_valid_time: 600
+  register: install_packages
+  until: install_packages|success
+  retries: 5
+  delay: 2
+  with_items: rsyslog_client_apt_packages
+  tags:
+    - rsyslog-client-apt-packages

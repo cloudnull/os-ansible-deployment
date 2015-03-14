@@ -13,12 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rsyslog_apt_repos:
-  - { repo: "ppa:adiscon/v8-stable", state: "present" }
-
-rsyslog_apt_packages:
-  - rsyslog
-
-rsyslog_pip_packages:
-  - python-memcached
-  - pycrypto
+galaxy_info:
+  author: rcbops
+  description: Rsyslog log client setup
+  company: Rackspace
+  license: Apache2
+  min_ansible_version: 1.6.6
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+  categories:
+    - client
+    - rsyslog
+    - development
+    - openstack
+dependencies: []

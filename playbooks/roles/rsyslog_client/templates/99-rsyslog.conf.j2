@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+
+$WorkDirectory {{ rsyslog_client_spool_directory }}
+
+{% if groups['rsyslog_all'] is defined and groups['rsyslog_all'] %}
+# Log shipment target servers
+{% for server in groups['rsyslog_all'] %}
+$ActionQueueType LinkedList
+$ActionQueueFileName {{ server }}
+$ActionResumeRetryCount -1
+$ActionQueueSaveOnShutdown on
+
+{% if rsyslog_server_tcp_reception == true %}
+*.* @@{{ hostvars[server]['ansible_ssh_host'] }}:{{ rsyslog_server_tcp_port }}
+{% endif %}
+{% if rsyslog_server_udp_reception == true %}
+*.* @{{ hostvars[server]['ansible_ssh_host'] }}:{{ rsyslog_server_udp_port }}
+{% endif %}
+
+{% endfor %}
+
+# Log files
+{% for log_file in rsyslog_client_log_files %}
+$InputFileName {{ log_file }}
+$InputFileTag {{ log_file.split('.log')[0] | basename }}:
+$InputFileStateFile state-{{ log_file.split('.log')[0] | basename }}
+$InputFileFacility local7
+$InputFilePollInterval 1
+$InputFilePersistStateInterval 1
+$InputRunFileMonitor
+
+{% endfor %}
+{% endif %}
+
+$template RFC3164fmt,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag%%msg%"
