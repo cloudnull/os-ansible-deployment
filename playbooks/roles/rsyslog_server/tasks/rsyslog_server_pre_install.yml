@@ -13,33 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Stop rsyslog
-  service:
-    name: "rsyslog"
-    state: "stopped"
-  failed_when: false
-  tags:
-    - rsyslog-config
-
-- name: Rsyslog Setup
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "root"
-    group: "root"
+- name: Ensure ownership on working directories are correct
+  file:
+    path: "{{ item }}"
+    state: "directory"
+    owner: "syslog"
+    group: "adm"
   with_items:
-    - { src: "50-default.conf.j2", dest: "/etc/rsyslog.d/50-default.conf" }
+    - /var/log/rsyslog
+    - "{{ rsyslog_server_spool_directory }}"
   tags:
-    - rsyslog-config
-
-- name: Generate Config Files
-  shell: "/opt/genlog.py > /etc/rsyslog.d/51-openstack.conf"
-  tags:
-    - rsyslog-config
-
-- name: Start rsyslog
-  service:
-    name: "rsyslog"
-    state: "started"
-  tags:
-    - rsyslog-config
+    - rsyslog-server-dirs

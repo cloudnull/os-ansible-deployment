@@ -13,28 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Install rsyslog packages
-  apt:
-    pkg: "{{ item }}"
-    state: latest
-    update_cache: yes
-    cache_valid_time: 600
-  register: install_packages
-  until: install_packages|success
-  retries: 5
-  delay: 2
-  with_items: rsyslog_apt_packages
-  tags:
-    - rsyslog-apt-packages
-
-- name: Install pip packages
-  pip:
-    name: "{{ item }}"
-    state: present
-  register: install_packages
-  until: install_packages|success
-  retries: 5
-  delay: 2
-  with_items: rsyslog_pip_packages
-  tags:
-    - rsyslog-pip-packages
+galaxy_info:
+  author: rcbops
+  description: Rsyslog server install
+  company: Rackspace
+  license: Apache2
+  min_ansible_version: 1.6.6
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+  categories:
+    - cloud
+    - rsyslog
+    - development
+    - openstack
+dependencies: []

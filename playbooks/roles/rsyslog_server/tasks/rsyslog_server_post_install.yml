@@ -13,23 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Deploy rsyslog config generator
+- name: Stop rsyslog
+  service:
+    name: "rsyslog"
+    state: "stopped"
+  failed_when: false
+  tags:
+    - rsyslog-config
+
+- name: Rsyslog Setup
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "root"
+    group: "root"
+  with_items:
+    - { src: "50-default.conf", dest: "/etc/rsyslog.d/50-default.conf" }
+  tags:
+    - rsyslog-config
+
+- name: Rsyslog Setup
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     owner: "root"
     group: "root"
-    mode: "0755"
   with_items:
-    - { src: "genlog.py.j2", dest: "/opt/genlog.py" }
+    - { src: "rsyslog.conf.j2", dest: "/etc/rsyslog.conf" }
   tags:
     - rsyslog-config
 
-- name: Ensure ownership on /var/spool/rsyslog
-  file:
-    path: "/var/spool/rsyslog"
-    state: "directory"
-    owner: "syslog"
-    group: "syslog"
+- name: Start rsyslog
+  service:
+    name: "rsyslog"
+    state: "started"
   tags:
-    - rsyslog-dirs
+    - rsyslog-config
