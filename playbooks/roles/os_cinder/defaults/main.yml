@@ -141,10 +141,13 @@ cinder_volume_name_template: volume-%s
 
 # Common apt packages
 cinder_apt_packages:
+  - sudo
   - dmeventd
   - libpq-dev
   - libkmod-dev
   - libkmod2
+  - libxslt1.1
+  - libxslt1-dev
   - nfs-common
   - parted
   - qemu-utils

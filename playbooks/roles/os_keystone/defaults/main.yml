@@ -123,6 +123,7 @@ keystone_apt_packages:
   - libldap2-dev
   - libsasl2-dev
   - libxslt1.1
+  - sudo
 
 # Common pip packages
 keystone_pip_packages:

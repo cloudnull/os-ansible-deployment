@@ -96,6 +96,8 @@ glance_image_cache_max_size: 10737418240
 
 # Common apt packages
 glance_apt_packages:
+  - sudo
+  - cron
   - rpcbind
   - rsync
   - git

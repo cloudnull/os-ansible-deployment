@@ -33,8 +33,10 @@ lxc_container_template_options: "--release {{ properties.container_release|defau
 # Default image to build from
 lxc_container_release: trusty
 
-lxc_container_template_main_apt_repo: "http://archive.ubuntu.com/ubuntu"
-lxc_container_template_security_apt_repo: "http://security.ubuntu.com/ubuntu"
+lxc_container_template_main_apt_repos:
+      - 'deb http://archive.ubuntu.com/ubuntu {{ lxc_container_release }} main restricted universe multiverse'
+      - 'deb http://archive.ubuntu.com/ubuntu {{ lxc_container_release }}-updates main restricted universe multiverse'
+      - 'deb http://security.ubuntu.com/ubuntu {{ lxc_container_release }}-security main restricted universe multiverse'
 
 lxc_container_default_interfaces: |
   # The loopback network interface

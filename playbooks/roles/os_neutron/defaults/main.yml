@@ -164,6 +164,7 @@ neutron_apt_packages:
   - iputils-arping
   - keepalived
   - libpq-dev
+  - sudo
 
 neutron_pip_packages:
   - configobj

@@ -199,7 +199,10 @@ nova_apt_packages:
   - genisoimage
   - git
   - libpq-dev
+  - libxslt1.1
+  - libxslt1-dev
   - spice-html5
+  - sudo
 
 nova_compute_kvm_apt_packages:
   - bridge-utils
@@ -211,6 +214,7 @@ nova_compute_kvm_apt_packages:
   - qemu
   - qemu-utils
   - sysfsutils
+  - sudo
   - vlan
 
 # Common pip packages

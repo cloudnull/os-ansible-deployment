@@ -13,6 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Ensure syslog is a user
+  user:
+    name: syslog
+    group: adm
+    system: true
+    shell: /bin/false
+  tags:
+   - rsyslog-server-user
+
 - name: Ensure ownership on working directories are correct
   file:
     path: "{{ item }}"

@@ -109,8 +109,9 @@ heat_plugin_dirs:
   - /usr/local/lib/heat
 
 heat_apt_packages:
-  - rsync
   - libxslt1.1
+  - rsync
+  - sudo
 
 heat_pip_packages:
   - keystonemiddleware

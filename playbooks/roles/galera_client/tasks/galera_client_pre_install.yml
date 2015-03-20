@@ -51,3 +51,9 @@
   delay: 2
   tags:
     - galera-client-repos
+
+- name: Force update cache
+  apt:
+    update_cache: yes
+  tags:
+    - galera-pre-apt-packages

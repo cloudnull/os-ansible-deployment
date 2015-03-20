@@ -127,6 +127,7 @@ swift_apt_packages:
   - openssh-server
   - python-dev
   - rsync
+  - sudo
 
 swift_account_program_names:
   - swift-account-server
