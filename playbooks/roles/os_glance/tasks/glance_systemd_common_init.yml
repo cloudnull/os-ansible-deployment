@@ -13,26 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: glance_pre_install.yml
-- include: glance_install.yml
-- include: glance_post_install.yml
-
-- name: Check init system
-  command: cat /proc/1/comm
-  register: pid1_name
+- name: Place the systemd init script
+  template:
+    src: "glance-systemd-init.j2"
+    dest: "/etc/systemd/system/{{ program_name }}.service"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  notify:
+    - Restart glance services
   tags:
-    - glance-init-name
+    - systemd-init
+    - glance-init
 
-- include: glance_upstart_init.yml
-  when: pid1_name.stdout == "init"
+- name: Enable service
+  command: "systemctl enable {{ program_name }}.service"
+  notify:
+    - Restart glance services
+  tags:
+    - systemd-init
+    - glance-init
 
-- include: glance_systemd_init.yml
-  when: pid1_name.stdout == "systemd"
-
-- include: glance_db_setup.yml
-  when: >
-    inventory_hostname == groups['glance_all'][0]
-
-- include: glance_service_setup.yml
-  when: >
-    inventory_hostname == groups['glance_all'][0]
+- name: Reload the systemd daemon
+  command: "systemctl daemon-reload"
+  tags:
+    - systemd-init
+    - glance-init

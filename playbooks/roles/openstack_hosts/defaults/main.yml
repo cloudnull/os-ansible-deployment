@@ -51,10 +51,11 @@ openstack_host_kernel_modules:
 
 ## Base packages
 openstack_host_apt_packages:
+  - apparmor
+  - apparmor-profiles
   - apparmor-utils
   - bridge-utils
   - build-essential
-  - cgroup-lite
   - curl
   - dmeventd
   - dstat

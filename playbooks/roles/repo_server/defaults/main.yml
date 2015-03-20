@@ -33,10 +33,11 @@ repo_memcached_servers: "{% for host in groups['repo_all'] %}{{ hostvars[host]['
 
 repo_apt_packages:
   - aptitude
+  - automake
   - bridge-utils
   - build-essential
-  - cgroup-lite
   - dmeventd
+  - docbook2x
   - fcgiwrap
   - git-core
   - iptables
@@ -46,6 +47,7 @@ repo_apt_packages:
   - rsync
   - sshpass
   - tmux
+  - libcap-dev
   - libldap2-dev
   - libsasl2-dev
   - libssl-dev
@@ -60,10 +62,11 @@ repo_apt_packages:
   - libkmod2
   - libvirt-dev
   - libmysqlclient-dev
-  - lxc-dev
   - lvm2
   - python-dev
   - python-software-properties
+  - python3-dev
+  - sudo
   - sqlite3
   - vlan
 

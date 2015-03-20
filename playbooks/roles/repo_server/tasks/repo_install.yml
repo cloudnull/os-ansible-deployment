@@ -26,6 +26,40 @@
   tags:
     - repo-apt-packages
 
+- name: Install lxc from source
+  shell: |
+    if [ ! -d "/opt/lxc" ];then
+      git clone https://github.com/lxc/lxc /opt/lxc
+    fi
+    pushd /opt/lxc
+      ./autogen.sh
+      ./configure --prefix=/usr \
+                  --libdir=/usr/lib/x86_64-linux-gnu \
+                  --libexecdir=/usr/lib/x86_64-linux-gnu \
+                  --with-rootfs-path=/usr/lib/x86_64-linux-gnu/lxc \
+                  --sysconfdir=/etc \
+                  --localstatedir=/var \
+                  --with-config-path=/var/lib/lxc \
+                  --enable-python \
+                  --enable-doc \
+                  --disable-rpath \
+                  --disable-lua \
+                  --disable-cgmanager \
+                  --disable-apparmor \
+                  --disable-selinux \
+                  --enable-tests \
+                  --enable-capabilities \
+                  --with-distro=debian
+      make
+      make install
+      ldconfig
+    popd
+  args:
+    creates: /usr/bin/lxc-checkconfig
+    executable: /bin/bash
+  tags:
+    - repo-lxc-source
+
 - name: Install pip packages
   pip:
     name: "{{ item }}"

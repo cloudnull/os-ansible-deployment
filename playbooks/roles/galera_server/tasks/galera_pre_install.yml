@@ -67,6 +67,13 @@
   tags:
     - galera-repos
 
+- name: Force update cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 600
+  tags:
+    - galera-pre-apt-packages
+
 - name: Prevent galera from starting on install
   copy:
     src: "policy-rc.d"

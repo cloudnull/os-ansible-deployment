@@ -27,6 +27,9 @@ lxc_container_fs_type: ext4
 lxc_container_backing_store: lvm
 lxc_container_vg_name: lxc
 
+# Options that we are passing into the template.
+lxc_container_template_options: "--release {{ properties.container_release|default(lxc_container_release) }}"
+
 # Default image to build from
 lxc_container_release: trusty
 

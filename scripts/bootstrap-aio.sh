@@ -49,7 +49,9 @@ info_block "Checking for required libraries." 2> /dev/null || source $(dirname $
 mkdir -p /openstack/log
 
 # Implement the log directory link for openstack-infra log publishing
-ln -s /openstack/log $SYMLINK_DIR
+if [ ! -L "$SYMLINK_DIR" ];then
+  ln -s /openstack/log $SYMLINK_DIR
+fi
 
 # Create ansible logging directory and add in a log file entry into ansible.cfg
 if [ -f "playbooks/ansible.cfg" ];then
@@ -93,8 +95,8 @@ apt-get install -y python-dev \
                    vlan \
                    bridge-utils \
                    lvm2 \
-                   xfsprogs \
-                   linux-image-extra-$(uname -r)
+                   xfsprogs
+#                   linux-image-extra-$(uname -r)
 
 # Flush all the iptables rules set by openstack-infra
 if [ "${FLUSH_IPTABLES}" == "yes" ]; then

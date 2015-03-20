@@ -17,9 +17,10 @@
   fail:
     msg: >
       Wrong kernel Variant found
-      [ {{ ansible_kernel.split('-')[2] }} != generic ]
+      [ {{ ansible_kernel.split('-')[2] }} ]
       Resolve this issue before continuing.
-  when: ansible_kernel.split('-')[2] != 'generic'
+  when: >
+    ansible_kernel.split('-')[2] not in ['generic', 'amd64']
   tags:
     - openstack-host-kernel-check
 

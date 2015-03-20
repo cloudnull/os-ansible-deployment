@@ -48,17 +48,11 @@ lxc_container_template_security_apt_repo: "http://security.ubuntu.com/ubuntu"
 lxc_apt_packages:
   - apparmor-utils
   - bridge-utils
-  - cgmanager
-  - cgroup-lite
   - debootstrap
   - dnsmasq
   - git
-  - liblxc1
   - lxc
-  - lxc-dev
-  - lxc-templates
   - python-dev
-  - python3-lxc
 
 # Prebuilt images to deploy onto hosts for use in containers.
 # lxc_container_caches:
