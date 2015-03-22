@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This sciprt was built for the express purpose of managing LXC on a 
-# host. The functions within this script provide for common operations 
+# This sciprt was built for the express purpose of managing LXC on a
+# host. The functions within this script provide for common operations
 # that may be required when working with LXC in production.
 
 # {{ ansible_managed }}
@@ -145,14 +145,15 @@ function start_dnsmasq() {
                                 --pid-file="${VARRUN}/dnsmasq.pid" \
                                 --conf-file="${LXC_DHCP_CONFILE}" \
                                 --listen-address="${LXC_ADDR}" \
-                                --dhcp-range="${LXC_DHCP_RANGE}" \
-                                --dhcp-lease-max="${LXC_DHCP_MAX}" \
+                                --no-hosts \
                                 --except-interface="lo" \
                                 --interface="${LXC_BRIDGE}" \
-                                --dhcp-leasefile="${DHCP_LEASE_FILE}" \
-                                --dhcp-no-override \
                                 --strict-order \
                                 --bind-interfaces \
+                                --dhcp-range="${LXC_DHCP_RANGE}" \
+                                --dhcp-lease-max="${LXC_DHCP_MAX}" \
+                                --dhcp-leasefile="${DHCP_LEASE_FILE}" \
+                                --dhcp-no-override \
                                 --dhcp-authoritative
     success "dnsmasq started."
 }
@@ -178,28 +179,34 @@ function stop_containers_with_fire() {
 
 function start_networks() {
     set -e
-    info "Building the LXC container network."
+    if [ -f "/sys/class/net/${LXC_BRIDGE}/bridge/bridge_id" ];then
+        success "LXC container network is already online."
+    else
+        if [ ! "$(ifup ${LXC_BRIDGE})" ];then
+            info "Building the LXC container network."
 
-    # Create lxc bridge
-    brctl addbr "${LXC_BRIDGE}"
+            # Create lxc bridge
+            brctl addbr "${LXC_BRIDGE}" || true
 
-    # Set the lxc bridge up
-    ip link set "${LXC_BRIDGE}" up || true
+            # Set the lxc bridge up
+            ip link set "${LXC_BRIDGE}" up || true
 
-    # Assign an address to the lxc bridge
-    ip addr add "${LXC_ADDR}"/"${LXC_NETMASK}" dev "${LXC_BRIDGE}"
+            # Assign an address to the lxc bridge
+            ip addr add "${LXC_ADDR}"/"${LXC_NETMASK}" dev "${LXC_BRIDGE}"
 
-    add_rules
+            add_rules
 
-    LXC_DOMAIN_ARG=""
-    if [ -n "$LXC_DOMAIN" ]; then
-        LXC_DOMAIN_ARG="-s $LXC_DOMAIN -S /$LXC_DOMAIN/"
+            LXC_DOMAIN_ARG=""
+            if [ -n "$LXC_DOMAIN" ]; then
+                LXC_DOMAIN_ARG="-s $LXC_DOMAIN -S /$LXC_DOMAIN/"
+            fi
+
+            # Start DNS mask
+            DHCP_LEASE_FILE="/var/lib/misc/dnsmasq.${LXC_BRIDGE}.leases"
+            start_dnsmasq
+            success "LXC container network has been created."
+        fi
     fi
-
-    # Start DNS mask
-    DHCP_LEASE_FILE="/var/lib/misc/dnsmasq.${LXC_BRIDGE}.leases"
-    start_dnsmasq
-    success "LXC container network has been created."
 }
 
 function stop_dnsmasq() {
@@ -326,21 +333,21 @@ case "$1" in
         system-start-up           Start up everything that LXC needs to
                                   operate, including the containers, dnsmasq,
                                   LXC bridge, and IPtables.
-        system-tear-down          Tear down everything LXC on this system. 
+        system-tear-down          Tear down everything LXC on this system.
                                   This will remove all all IPtables rules, kill
                                   dnsmasq, remove the LXC bridge, stops all
-                                  containers, removes DOWN veth interfaces, 
+                                  containers, removes DOWN veth interfaces,
                                   and flushes the net cache.
-        system-force-tear-down    Force tear down everything LXC on this system. 
+        system-force-tear-down    Force tear down everything LXC on this system.
                                   This will remove all all IPtables rules, kill
                                   dnsmasq, remove the LXC bridge, stops all
-                                  containers, removes DOWN veth interfaces, 
+                                  containers, removes DOWN veth interfaces,
                                   and flushes the net cache.
         system-rebuild            Rebuild the LXC network, IPtables, dnsmasq,
-                                  removes DOWN veth interfaces, flushes the 
+                                  removes DOWN veth interfaces, flushes the
                                   net cache, and restarts all conatiners.
         system-force-rebuild      Force rebuild the LXC network, IPtables, dnsmasq,
-                                  removes DOWN veth interfaces, flushes the 
+                                  removes DOWN veth interfaces, flushes the
                                   net cache, and restarts all conatiners.
         dnsmasq-start             Start the LXC dnsmasq process.
         dnsmasq-stop              Stop the LXC dnsmasq process.
@@ -349,7 +356,7 @@ case "$1" in
         iptables-remove           Remove the LXC IPtables rules for NAT.
         iptables-recreate         Recreate the LXC IPtables rules for NAT.
         veth-cleanup              Remove all DOWN veth interfaces from a system.
-        flush-net-cache           Flush the hosts network cache. This is usful if 
+        flush-net-cache           Flush the hosts network cache. This is usful if
                                   IP addresses are being recycled on to containers
                                   from other hosts.
         '

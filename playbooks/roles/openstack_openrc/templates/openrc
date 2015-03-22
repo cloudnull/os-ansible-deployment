@@ -1,7 +1,8 @@
-# Do not edit, changes will be overwritten
+# {{ ansible_managed }}
 
 # COMMON CINDER ENVS
 export CINDER_ENDPOINT_TYPE={{ openrc_cinder_endpoint_type }}
+export OS_VOLUME_API_VERSION={{ openrc_cinder_os_volume_api_version }}
 
 # COMMON NOVA ENVS
 export NOVA_ENDPOINT_TYPE={{ openrc_nova_endpoint_type }}

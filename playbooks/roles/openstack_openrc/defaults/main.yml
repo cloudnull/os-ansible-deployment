@@ -18,6 +18,8 @@ openrc_cinder_endpoint_type: internalURL
 openrc_nova_endpoint_type: internalURL
 openrc_os_endpoint_type: internalURL
 
+openrc_cinder_os_volume_api_version: 2
+
 ## Default credentials
 openrc_os_username: admin
 openrc_os_tenant_name: admin

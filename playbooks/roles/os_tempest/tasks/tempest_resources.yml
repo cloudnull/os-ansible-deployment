@@ -13,22 +13,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+## This was removed because the glance module does not currently support the
+## v2 API and it must as v1 has been deprecated.
+# - name: Ensure cirros image
+#   glance:
+#     command: 'image-create'
+#     openrc_path: /root/openrc
+#     image_name: cirros
+#     image_url: 'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img'
+#     image_container_format: bare
+#     image_disk_format: qcow2
+#     image_is_public: True
+#   tags:
+#     - tempest-setup
+#     - tempest-config
+
+# - name: Store glance image id
+#   set_fact:
+#     tempest_glance_image_id: "{{ glance_images.cirros.id }}"
+#   tags:
+#     - tempest-setup
+#     - tempest-config
+## This was removed because the glance module does not currently support the
+## v2 API and it must as v1 has been deprecated.
+
+## TODO(someone) this should be removed in favor of the glance module just as soon
+## as the module supports glance API v2.
 - name: Ensure cirros image
-  glance:
-    command: 'image-create'
-    openrc_path: /root/openrc
-    image_name: cirros
-    image_url: 'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img'
-    image_container_format: bare
-    image_disk_format: qcow2
-    image_is_public: True
+  shell: |
+    wget http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img
+    . /root/openrc
+    if ! glance image-list | grep -w "cirros"; then
+      glance image-create --name='cirros' \
+                          --is-public=true \
+                          --container-format=bare \
+                          --disk-format=qcow2 < cirros-0.3.3-x86_64-disk.img | awk '/id/ {print $4}'
+    fi
+  args:
+    chdir: /opt
+  register: shell_glance_image
   tags:
     - tempest-setup
     - tempest-config
 
+## TODO(someone) this should be removed in favor of the glance module just as soon
+## as the module supports glance API v2.
 - name: Store glance image id
   set_fact:
-    tempest_glance_image_id: "{{ glance_images.cirros.id }}"
+    tempest_glance_image_id: "{{ shell_glance_image.stdout }}"
   tags:
     - tempest-setup
     - tempest-config
@@ -154,6 +186,7 @@
     tenant_id: "{{ keystone_demo_tenant_id }}"
   tags:
     - tempest-setup
+    - tempest-config
 
 - name: Store neutron private network id
   set_fact:

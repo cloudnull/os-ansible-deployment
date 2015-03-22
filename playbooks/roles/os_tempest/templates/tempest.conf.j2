@@ -144,7 +144,7 @@ http_image = http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-uec.tar.
 
 
 [image-feature-enabled]
-api_v1 = true
+api_v1 = false
 api_v2 = {{ tempest_image_api_v2_enabled }}
 
 
@@ -235,7 +235,7 @@ zaqar = {{ tempest_service_available_zaqar }}
 backend1_name = lvm
 build_interval = 1
 build_timeout = 600
-catalog_type = volume
+catalog_type = volumev2
 disk_format = raw
 endpoint_type = internalURL
 storage_protocol = iSCSI
@@ -245,8 +245,8 @@ volume_size = 1
 
 [volume-feature-enabled]
 api_extensions = all
-api_v1 = true
-api_v2 = false
+api_v1 = false
+api_v2 = true
 backup = false
 multi_backend = false
 snapshot = false
