@@ -1,4 +1,4 @@
----
+#!/usr/bin/env bash
 # Copyright 2014, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apt_container_keys:
-  - { url: "https://monitoring.api.rackspacecloud.com/pki/agent/linux.asc", state: "present" }
 
-apt_container_repos:
-  - { repo: "deb {{ raxmon_repo_url }} cloudmonitoring main", state: "present" }
+if echo "$@" | grep -e '-h' -e '--help' || [ -z "${2}" ];then
+    echo "
+Options:
+  -r|--revision       (name/id of revision)
+"
+exit 0
+fi
 
-container_packages:
-  - rackspace-monitoring-agent
+# Provide some CLI options
+while [[ $# > 1 ]]
+do
+key="$1"
+case $key in
+    -r|--revision)
+    REVISION="$2"
+    shift
+    ;;
+    *)
+    ;;
+esac
+shift
+done
 
-pip_requirements_file: "/usr/lib/rackspace-monitoring-agent/plugins/requirements.txt"
-
-git_repo: https://github.com/rcbops/rpc-maas
-git_install_branch: juno
+sed -i '' "s/^rpc_release\:.*/rpc_release\: ${REVISION}/" rpc_deployment/inventory/group_vars/all.yml
+sed -i '' "s/^git_install_branch\:.*/git_install_branch\: ${REVISION}/" rpc_deployment/vars/repo_packages/raxmon_agent.yml
