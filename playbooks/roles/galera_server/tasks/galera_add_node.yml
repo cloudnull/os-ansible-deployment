@@ -34,6 +34,10 @@
   service:
     name: mysql
     state: restarted
+  register: restart_mysql
+  until: restart_mysql|success
+  retries: 3
+  delay: 3
   when: wsrep_incoming_addresses|changed or mysql_running|changed
   tags:
     - galera-add-node

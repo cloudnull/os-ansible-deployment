@@ -51,10 +51,7 @@
     - galera-bootstrap
 
 - name: bootstrap cluster (initialise mysql with --wsrep-new-cluster)
-  service:
-    name: mysql
-    state: restarted
-    args: --wsrep-new-cluster
+  command: "service mysql start --wsrep-new-cluster"
   when: wsrep_cluster_size|changed or mysqlstopped|changed or mysql_running|changed
   tags:
     - galera-bootstrap
