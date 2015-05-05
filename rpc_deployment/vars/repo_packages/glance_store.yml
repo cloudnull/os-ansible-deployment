@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-repo_package_name: rackspace-monitoring-cli
+repo_package_name: glance_store
 
 repo_path: "{{ repo_package_name }}_{{ git_install_branch | replace('/', '_') }}"
 
-git_repo: https://github.com/racker/rackspace-monitoring-cli
-git_install_branch: "v0.6.9"
+## Git Source
+git_repo: https://github.com/openstack/glance_store
+git_fallback_repo: https://git.openstack.org/openstack/glance_store
 git_dest: "/opt/{{ repo_path }}"
-
-pip_wheel_name: rackspace-monitoring-cli
+git_install_branch: 0.1.10
+git_etc_example: etc/
