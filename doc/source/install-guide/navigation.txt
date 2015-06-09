@@ -1,0 +1,137 @@
+`Main Index <index.html>`__
+
+----------
+
+-  `1. Preface <common-front.html>`__
+
+   -  `About OpenStack Ansible Deployment
+      Software <about-openstack-ansible.html>`__
+
+-  `2. Overview <ch-overview.html>`__
+
+   -  `Ansible <sec_overview_ansible.html>`__
+   -  `Linux Containers (LXC) <sec-overview_lxc.html>`__
+   -  `Host layout <sec_overview_host-layout.html>`__
+   -  `Host networking <sec_overview_host-networking.html>`__
+   -  `OpenStack Networking <sec_overview_neutron.html>`__
+   -  `Installation requirements <sec_overview_requirements.html>`__
+   -  `Installation workflow <sec-overview-workflow.html>`__
+
+-  `3. Deployment host <ch-hosts-deployment.html>`__
+
+   -  `Installing the operating system <sec-hosts-deployment-os.html>`__
+   -  `Configuring the operating
+      system <sec-hosts-deployment-add.html>`__
+   -  `Installing source and
+      dependencies <sec-hosts-deployment-rpc.html>`__
+   -  `Configuring Secure Shell (SSH)
+      keys <sec-hosts-deployment-sshkeys.html>`__
+
+-  `4. Target hosts <ch-hosts-target.html>`__
+
+   -  `Installing the operating system <sec-hosts-target-os.html>`__
+   -  `Configuring Secure Shell (SSH)
+      keys <sec-hosts-target-sshkeys.html>`__
+   -  `Configuring the operating system <sec-hosts-target-add.html>`__
+   -  `Configuring LVM <sec-config-lvm.html>`__
+   -  `Configuring the network <sec-hosts-target-network.html>`__
+
+      -  `Reference
+         architecture <sec-hosts-target-network-refarch.html>`__
+      -  `Configuring the network on a target
+         host <sec-hosts-target-network-example.html>`__
+
+-  `5. Deployment configuration <ch-configure.html>`__
+
+   -  `Prerequisites <sec_configure-prerequisites.html>`__
+   -  `Configuring target host
+      networking <sec_configure-networking.html>`__
+   -  `Configuring target hosts <sec_configure-hostlist.html>`__
+   -  `Configuring service credentials <sec_configure-creds.html>`__
+   -  `Configuring the hypervisor
+      (optional) <sec_configure-hypervisor.html>`__
+   -  `Configuring the Image service
+      (optional) <sec_configure-glance.html>`__
+   -  `Configuring the Block Storage service
+      (optional) <sec_configure-cinder.html>`__
+   -  `Configuring the Block Storage service with NFS protocols
+      (optional). <sec_configure-cinder-nfs.html>`__
+   -  `Configuring Block Storage backups
+      (optional) <sec_cinder_backups.html>`__
+   -  `Creating Block Storage availability zones
+      (optional) <sec_cinder-availabilityzones.html>`__
+   -  `Configuring the Object Storage service
+      (optional) <sec-configure-swift.html>`__
+
+      -  `Configure and mount storage
+         devices <ch-object-storage-storage-devices.html>`__
+      -  `Configure an Object Storage
+         deployment <ch-configure-deployment.html>`__
+
+         -  `Configuring Object Storage <sec-configuring-swift.html>`__
+         -  `Storage Policies <sec-swift-storage-policies.html>`__
+
+      -  `Deploying Object Storage on an existing deployment 
+         <ch-object-storage-existing-kilo.html>`__
+
+      -  `Integrate Object Storage with the Image
+         Service <ch-object-storage-image-service.html>`__
+
+   -  `Configuring HAProxy (optional) <sec-hosts-haproxy.html>`__
+
+-  `6. Foundation playbooks <ch-playbooks-foundation.html>`__
+
+   -  `Running the foundation
+      playbook <sec-playbooks-foundation-run.html>`__
+   -  `Troubleshooting <sec-playbooks-foundation-troubleshoot.html>`__
+
+-  `7. Infrastructure playbooks <ch-playbooks-infrastructure.html>`__
+
+   -  `Running the infrastructure
+      playbook <sec-playbooks-infrastructure-run.html>`__
+   -  `Verifying infrastructure
+      operation <sec-playbooks-infrastructure-verify.html>`__
+
+-  `8. OpenStack playbooks <ch-playbooks-openstack.html>`__
+
+   -  `Utility Container
+      Overview <sec-utility-container-overview.html>`__
+   -  `Running the OpenStack
+      playbook <sec-playbooks-openstack-run.html>`__
+   -  `Verifying OpenStack
+      operation <sec-playbooks-openstack-verify.html>`__
+
+-  `9. Operations <ch-ops.html>`__
+
+   -  `Adding a compute host <sec-ops-add-compute-host.html>`__
+   -  `Galera cluster maintenance <sec-ops-galera-maintenance.html>`__
+
+      -  `Removing nodes <sec-ops-galera-maintenance-remove.html>`__
+      -  `Starting a cluster <sec-ops-galera-maintenance-start.html>`__
+
+   -  `Galera cluster recovery <sec-ops-galera-recovery.html>`__
+
+      -  `Single-node failure <sec-ops-galera-recovery-single.html>`__
+      -  `Multi-node failure <sec-ops-galera-recovery-multi.html>`__
+      -  `Complete failure <sec-ops-galera-recovery-complete.html>`__
+      -  `Rebuilding a
+         container <sec-ops-galera-recovery-container.html>`__
+
+-  `A. OSAD configuration files <app-osad-configfiles.html>`__
+
+   -  `openstack\_user\_config.yml example configuration
+      file <app-configfiles-openstack_user_config.html>`__
+   -  `user\_secrets.yml configuration
+      file <app-configfiles-user_secrets.html>`__
+   -  `user\_variables.yml configuration
+      file <app-configfiles-user_variables.html>`__
+   -  `swift.yml example configuration
+      file <app-configfiles-swift_example.html>`__
+   -  `openstack\_environment.yml configuration
+      file <app-configfiles-openstack_environment.html>`__
+   -  `extra\_container.yml configuration
+      file <app-configfiles-extra_container.html>`__
+
+-  `10. Additional resources <common-end.html>`__
+
+   -  `Document change history <overview-dochistory.html>`__
