@@ -13,32 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: keystone_pre_install.yml
-- include: keystone_install.yml
-
-- include: keystone_key_setup.yml
+- name: Retrieve authorized keys
+  memcached:
+    name: "{{ item.name }}"
+    file_path: "{{ item.src }}"
+    state: "retrieve"
+    file_mode: "{{ item.file_mode }}"
+    dir_mode: "{{ item.dir_mode }}"
+    server: "{{ memcached_servers }}"
+    encrypt_string: "{{ memcached_encryption_key }}"
+  with_items:
+    - { src: "{{ keystone_system_user_home }}/.ssh/authorized_keys", name: "authorized_keys", file_mode: "0640", dir_mode: "0750" }
+  register: memcache_keys
+  until: memcache_keys|success
+  retries: 5
+  delay: 2
   tags:
     - keystone-key
     - keystone-key-distribute
-
-- include: keystone_fernet.yml
-  tags:
-    - keystone-fernet
-  when: >
-    'fernet' in keystone_token_provider
-
-- include: keystone_post_install.yml
-
-- include: keystone_db_setup.yml
-  when: >
-    inventory_hostname == groups['keystone_all'][0]
-
-- include: keystone_apache.yml
-- include: keystone_token_cleanup.yml
-
-- include: keystone_service_setup.yml
-  when: >
-    inventory_hostname == groups['keystone_all'][0]
-
-- name: Flush handlers
-  meta: flush_handlers

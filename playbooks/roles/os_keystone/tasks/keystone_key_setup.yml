@@ -1,5 +1,5 @@
 ---
-# Copyright 2015, Rackspace US, Inc.
+# Copyright 2014, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Fetch the fernet key repository
-  synchronize:
-    src: "{{ keystone_fernet_tokens_key_repository }}"
-    dest: /tmp/
-    recursive: yes
-    mode: pull
+- include: keystone_key_create.yml
   tags:
-    - keystone-setup
-    - keystone-fernet
+    - keystone-key
+    - keystone-key-create
+
+- include: keystone_key_store.yml
+  when: >
+    inventory_hostname == groups['keystone_all'][0]
+  tags:
+    - keystone-key
+    - keystone-key-store
+
+- include: keystone_key_distribute.yml
+  when: >
+    inventory_hostname != groups['keystone_all'][0]
+  tags:
+    - keystone-key
+    - keystone-key-distribute

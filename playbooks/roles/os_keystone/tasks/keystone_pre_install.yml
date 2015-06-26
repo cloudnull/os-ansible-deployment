@@ -43,6 +43,7 @@
     - { path: "/etc/keystone" }
     - { path: "{{ keystone_ldap_domain_config_dir }}" }
     - { path: "/etc/keystone/ssl" }
+    - { path: "{{ keystone_fernet_tokens_key_repository }}", mode: "1750"}
     - { path: "/etc/sudoers.d", mode: "0750", owner: "root", group: "root" }
     - { path: "{{ keystone_system_user_home }}" }
     - { path: "/var/www/cgi-bin", owner: root, group: root }
