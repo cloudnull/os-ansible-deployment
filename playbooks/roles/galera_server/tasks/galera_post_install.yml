@@ -13,6 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Check if mysql is running
+  command: /usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf ping
+  ignore_errors: true
+  changed_when: mysql_started.rc != 0
+  register: mysql_started
+  notify: Restart mysql
+  tags:
+  - galera-bootstrap
+
 - name: Create the local directories
   file:
     path: "{{ item.path }}"
@@ -22,7 +31,8 @@
     mode: "{{ item.mode|default('0755') }}"
     recurse: "{{ item.recurse|default('false') }}"
   with_items:
-    - { path: "/var/log/mysql/", owner: "mysql", recurse: "true" }
+    - { path: "/var/lib/mysql", owner: "mysql", mode: "2755" }
+    - { path: "/var/log/mysql", owner: "mysql", mode: "2755" }
     - { path: "/var/log/mysql_logs/", owner: "mysql", group: "syslog", mode: "2755" }
     - { path: "/etc/mysql/conf.d" }
   tags:
@@ -38,17 +48,6 @@
     - { src: cluster.cnf.j2, dest: /etc/mysql/conf.d/cluster.cnf }
     - { src: debian.cnf.j2, dest: /etc/mysql/debian.cnf }
     - { src: mysql_defaults.j2, dest: /etc/default/mysql }
-  notify: Restart mysql
-  tags:
-    - galera-config
-
-- name: Drop mariadb script(s)
-  copy:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: "{{ item.mode|default('0644') }}"
-  with_items:
-    - { src: mysql_init.sh, dest: /etc/init.d/mysql, mode: "0755" }
   notify: Restart mysql
   tags:
     - galera-config

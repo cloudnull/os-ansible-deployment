@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Check galera cluster status
+- name: Install galera server
   hosts: galera_all
   max_fail_percentage: 0
-  tasks:
+  user: root
+  pre_tasks:
     - name: Check if mysql is running
       command: /usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf ping
       ignore_errors: true
@@ -56,17 +57,7 @@
         galera_existing_cluster: true
       with_items: play_hosts
       when: hostvars[item].mysql_running.rc == 0
-  vars:
-    galera_ignore_cluster_state: false
-  tags:
-    - discover-galera-cluster-state
 
-- name: Install galera server
-  hosts: galera_all
-  serial: 1
-  max_fail_percentage: 20
-  user: root
-  pre_tasks:
     - name: Galera extra lxc config
       lxc_container:
         name: "{{ container_name }}"
@@ -78,11 +69,13 @@
       when: is_metal == false or is_metal == "False"
       tags:
         - galera-mysql-dir
+
     - name: Flush net cache
       command: /usr/local/bin/lxc-system-manage flush-net-cache
       delegate_to: "{{ physical_host }}"
       tags:
         - flush-net-cache
+
     - name: Wait for container ssh
       wait_for:
         port: "22"
@@ -106,7 +99,11 @@
       tags:
         - "system-crontab-coordination"
   vars:
+    galera_ignore_cluster_state: false
     galera_wsrep_node_name: "{{ container_name }}"
+    galera_lb_address: "{{ internal_lb_vip_address }}"
     ansible_hostname: "{{ container_name }}"
     ansible_ssh_host: "{{ container_address }}"
     is_metal: "{{ properties.is_metal|default(false) }}"
+  tags:
+    - discover-galera-cluster-state
