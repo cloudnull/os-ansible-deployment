@@ -1,0 +1,71 @@
+# this is a virtual module that is entirely implemented server side
+
+DOCUMENTATION = """
+---
+module: crud_template
+version_added: 1.9.2
+short_description: Renders template files providing a create/update override interface
+description:
+  - Templates are processed by the Jinja2 templating language
+    (U(http://jinja.pocoo.org/docs/)) - documentation on the template
+    formatting can be found in the Template Designer Documentation
+    (U(http://jinja.pocoo.org/docs/templates/)).
+  - "Six additional variables can be used in templates: C(ansible_managed) 
+    (configurable via the C(defaults) section of C(ansible.cfg)) contains a string
+    which can be used to describe the template name, host, modification time of the
+    template file and the owner uid, C(template_host) contains the node name of 
+    the template's machine, C(template_uid) the owner, C(template_path) the
+    absolute path of the template, C(template_fullpath) is the absolute path of the 
+    template, and C(template_run_date) is the date that the template was rendered. 
+    Note that including a string that uses a date in the template will result in 
+    the template being marked 'changed' each time."
+options:
+  src:
+    description:
+      - Path of a Jinja2 formatted template on the local server. This can be a relative or absolute path.
+    required: true
+    default: null
+    aliases: []
+  dest:
+    description:
+      - Location to render the template to on the remote machine.
+    required: true
+    default: null
+  cu_data:
+    description:
+      - A dictionary used to update or override items within a configuration template.
+        The dictionary data structure may be nested. If the target config file is an ini
+        file the nested keys in the ``cu_data`` will be used as section headers.
+  conf_type:
+    description:
+      - A string value describing the target config type.
+    choices:
+      - ini
+      - json
+      - yaml
+author: Kevin Carter
+"""
+
+EXAMPLES = """
+  - name: run crud template ini
+    crud_template:
+      src: templates/test.ini.j2
+      dest: /tmp/test.ini
+      cu_data: {}
+      conf_type: ini
+
+  - name: run crud template json
+    crud_template:
+      src: templates/test.json.j2
+      dest: /tmp/test.json
+      cu_data: {}
+      conf_type: json
+
+  - name: run crud template yaml
+    crud_template:
+      src: templates/test.yaml.j2
+      dest: /tmp/test.yaml
+      cu_data: {}
+      conf_type: yaml
+"""
+
