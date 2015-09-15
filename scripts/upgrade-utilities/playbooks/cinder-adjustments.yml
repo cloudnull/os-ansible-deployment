@@ -1,0 +1,33 @@
+---
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Cinder adjustments
+  hosts: "cinder_volumes"
+  gather_facts: false
+  user: root
+  tasks:
+    - name: find containers in /var/lib/lxc
+      command: "find /var/lib/lxc -maxdepth 2 -type f -name 'config'"
+      register: containers
+      delegate_to: "{{ physical_host }}"
+      failed_when: false
+    - name: Remove "lxc.mount.entry  =  udev dev devtmpfs defaults 0 0"
+      lineinfile:
+        dest: "{{ item }}"
+        state: "absent"
+        regexp: "^lxc.mount.entry  =  udev dev devtmpfs defaults 0 0"
+      with_items: containers.stdout_lines
+      when: containers.rc == 0
+      delegate_to: "{{ physical_host }}"
