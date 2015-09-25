@@ -13,12 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Restart mysql
+- name: Start cluster with wsrep
   service:
     name: mysql
     state: restarted
-    args: "{{ (not galera_existing_cluster | bool and inventory_hostname == groups['galera_all'][0]) | ternary('--wsrep-new-cluster', '') }}"
-  register: galera_restart
-  until: galera_restart|success
-  retries: 3
-  delay: 2
+    args: "--wsrep-new-cluster"
+  when: >
+    not galera_existing_cluster | bool and
+    inventory_hostname == galera_server_bootstrap_node
+  tags:
+    - galera-bootstrap
+
+- name: Wait for operational state
+  command: mysql --silent --skip-column-names -e 'SHOW STATUS LIKE "wsrep_evs_state"'
+  register: galera_check_wait
+  until: galera_check_wait|success
+  failed_when: not galera_check_wait.stdout | search("OPERATIONAL")
+  retries: 6
+  delay: 5
+  when: >
+    not galera_existing_cluster | bool and
+    inventory_hostname == galera_server_bootstrap_node
+  tags:
+    - galera-operational
