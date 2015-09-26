@@ -115,14 +115,28 @@
       when: is_metal | bool
       tags:
         - nova-logs
+    - name: Lookup novnc console install install_branch
+      local_action: >
+        shell
+        awk '/^novncproxy_git_install_branch:/ {print $2}' defaults/repo_packages/openstack_other.yml
+      register: novncproxy_git_install_branch
+      tags:
+        - "nova-novnc-console"
   roles:
-    - { role: "os_nova", tags: [ "os-nova" ] }
+    - role: "os_nova"
+      nova_novncproxy_git_repo: "{{ openstack_repo_git_url }}/novnc"
+      nova_novncproxy_git_install_branch: "{{ novncproxy_git_install_branch.stdout }}"
+      nova_galera_address: "{{ internal_lb_vip_address }}"
+      tags:
+        - "os-nova"
     - role: "ceph_client"
       openstack_service_system_user: "{{ nova_system_user_name }}"
       tags:
         - "nova-ceph-client"
         - "ceph-client"
-    - { role: "openstack_openrc", tags: [ "openstack-openrc" ] }
+    - role: "openstack_openrc"
+      tags:
+        - "openstack-openrc"
     - role: "rsyslog_client"
       rsyslog_client_log_dir: "/var/log/nova"
       rsyslog_client_config_name: "99-nova-rsyslog-client.conf"
@@ -134,7 +148,6 @@
         - "system-crontab-coordination"
   vars:
     galera_address: "{{ internal_lb_vip_address }}"
-    nova_galera_address: "{{ internal_lb_vip_address }}"
     ansible_hostname: "{{ container_name }}"
     ansible_ssh_host: "{{ container_address }}"
     is_metal: "{{ properties.is_metal|default(false) }}"
