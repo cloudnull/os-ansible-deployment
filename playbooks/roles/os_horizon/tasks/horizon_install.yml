@@ -37,6 +37,22 @@
     - horizon-install
     - horizon-apt-packages
 
+- name: Install pip packages (venv)
+  pip:
+    name: "{{ item }}"
+    state: present
+    virtualenv: "{{ horizon_venv_bin | dirname }}"
+    virtualenv_site_packages: "no"
+  register: install_packages
+  until: install_packages|success
+  retries: 5
+  delay: 2
+  with_items:
+    - "{{ horizon_pip_packages }}"
+  when: horizon_venv_enabled | bool
+  tags:
+    - horizon-pip-packages
+
 - name: Install pip packages
   pip:
     name: "{{ item }}"
@@ -47,6 +63,6 @@
   delay: 2
   with_items:
     - "{{ horizon_pip_packages }}"
+  when: not horizon_venv_enabled | bool
   tags:
-    - horizon-install
     - horizon-pip-packages
