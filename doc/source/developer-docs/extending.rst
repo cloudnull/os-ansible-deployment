@@ -1,5 +1,5 @@
 Extending openstack-ansible
-===============================
+===========================
 
 The openstack-ansible project provides a basic OpenStack environment, but
 many deployers will wish to extend the environment based on their needs. This
@@ -10,7 +10,7 @@ Using these extension points, deployers can provide a more 'opinionated'
 installation of OpenStack that may include their own software.
 
 Including openstack-ansible in your project
------------------------------------------------
+-------------------------------------------
 
 Including the openstack-ansible repository within another project can be
 done in several ways.
@@ -117,3 +117,118 @@ Adding Galaxy roles
 Any roles defined in ``openstack-ansible/ansible-role-requirements.yml``
 will be installed by the
 ``openstack-ansible/scripts/bootstrap-ansible.sh`` script.
+
+
+Setting overrides in configuration files
+----------------------------------------
+
+All of the services that use YAML, JSON, or INI for configuration can recieve
+overrides through the use of a Ansible action plugin named ``config_template``.
+The configuration template engine allows a deployer to use a simple dictionary
+to modify or add items into configuration files at run time that may not have a
+preset template option. All OpenStack-Ansible roles allow for this functionality
+where applicable. Files available to receive overrides can be seen in the
+``defaults/main.yml`` file as standard empty dictionaries (hashes). This
+documentation will not cover every available override option throughout the
+stack but will cover how to use module along with overrides.
+
+
+These are the options available as found within the virtual module documentation
+section.
+
+Module documentation
+++++++++++++++++++++
+
+.. code-block:: yaml
+
+    module: config_template
+    version_added: 1.9.2
+    short_description: >
+      Renders template files providing a create/update override interface
+    description:
+      - The module contains the template functionality with the ability to
+        override items in config, in transit, though the use of an simple
+        dictionary without having to write out various temp files on target
+        machines. The module renders all of the potential jinja a user could
+        provide in both the template file and in the override dictionary which
+        is ideal for deployers whom may have lots of different configs using a
+        similar code base.
+      - The module is an extension of the **copy** module and all of attributes
+        that can be set there are available to be set here.
+    options:
+      src:
+        description:
+          - Path of a Jinja2 formatted template on the local server. This can
+            be a relative or absolute path.
+        required: true
+        default: null
+      dest:
+        description:
+          - Location to render the template to on the remote machine.
+        required: true
+        default: null
+      config_overrides:
+        description:
+          - A dictionary used to update or override items within a configuration
+            template. The dictionary data structure may be nested. If the target
+            config file is an ini file the nested keys in the ``config_overrides``
+            will be used as section headers.
+      config_type:
+        description:
+          - A string value describing the target config type.
+        choices:
+          - ini
+          - json
+          - yaml
+
+
+Example task using the "config_template" module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   - name: Run config template ini
+    config_template:
+      src: test.ini.j2
+      dest: /tmp/test.ini
+      config_overrides: {{ test_overrides }}
+      config_type: ini
+
+
+Example overrides dictionary(hash)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   test_overrides:
+     DEFAULT:
+       new_item: 12345
+
+
+Original template  file "test.ini.j2"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: ini
+
+   [DEFAULT]
+   value1 = abc
+   value2 = 123
+
+
+Rendered on disk file "/tmp/test.ini"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: ini
+
+   [DEFAULT]
+   value1 = abc
+   value2 = 123
+   new_item = 12345
+
+
+In this task the ``test.ini.j2`` file is a template which will be rendered and
+written to disk at ``/tmp/test.ini``. The **config_overrides** entry is a
+dictionary(hash) which allows a deployer to set arbitrary data as overrides to
+be written into the configuration file at run time. The **config_type** entry
+specifies the type of configuration file the module will be interacting with;
+available options are "yaml", "json", and "ini".
