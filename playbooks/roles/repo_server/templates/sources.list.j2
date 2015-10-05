@@ -1,0 +1,5 @@
+# Sources created by the ansible
+deb {{ item.main_apt_repo }}     {{ item.release }} main restricted universe multiverse
+deb {{ item.main_apt_repo }}     {{ item.release }}-updates main restricted universe multiverse
+deb {{ item.main_apt_repo }}     {{ item.release }}-backports main restricted universe multiverse
+deb {{ item.security_apt_repo }} {{ item.release }}-security main restricted universe multiverse

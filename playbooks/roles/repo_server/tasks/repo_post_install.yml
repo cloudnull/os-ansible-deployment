@@ -68,6 +68,9 @@
     - { path: "{{ repo_service_home_folder }}/repo/python_packages/pools", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
     - { path: "{{ repo_service_home_folder }}/repo/pools", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
     - { path: "{{ repo_service_home_folder }}/repo/reports", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
+    - { path: "{{ repo_service_home_folder }}/repo/lxc-images", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
+    - { path: "{{ repo_service_home_folder }}/meta", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
+    - { path: "{{ repo_service_home_folder }}/meta/1.0", state: "directory", owner: "{{ repo_service_user_name }}", group: "{{ repo_service_group_name }}", mode: "2755" }
     - { path: "/etc/lsyncd", state: "directory", mode: "0755" }
     - { path: "/var/log/lsyncd", state: "directory", mode: "0755" }
     - { path: "/etc/nginx/sites-enabled/default", state: "absent", mode: "0644" }

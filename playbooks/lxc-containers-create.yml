@@ -14,23 +14,19 @@
 # limitations under the License.
 
 - name: Create container(s)
-  hosts: "{{ container_group|default('all_containers') }}"
+  hosts: "{{ container_group|default('all_containers') }}:!repo_container"
   max_fail_percentage: 20
   gather_facts: false
   user: root
   roles:
-    - { role: "lxc_container_create", tags: [ "lxc-container-create" ] }
-  post_tasks:
-    - name: Wait for ssh to be available
-      local_action:
-        module: wait_for
-        port: "{{ ansible_ssh_port | default('22') }}"
-        host: "{{ ansible_ssh_host | default(inventory_hostname) }}"
-        search_regex: OpenSSH
-        delay: 1
+    - role: "lxc_container_create"
+      lxc_container_image_server: "{{ openstack_repo_uri }}"
+      lxc_container_variant: "base-image"
+      lxc_container_release: "{{ properties.container_release|default('trusty') }}"
+      lxc_container_fs_size: "{{ properties.container_fs_size|default('5G') }}"
+      when: not is_metal | bool
       tags:
-        - lxc-container-wait-for-ssh
+        - "lxc-container-create"
   vars:
     ansible_hostname: "{{ container_name }}"
     is_metal: "{{ properties.is_metal|default(false) }}"
-    lxc_container_release: "{{ properties.container_release|default('trusty') }}"

@@ -1,0 +1,187 @@
+---
+# Copyright 2014, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Create container
+  lxc_container:
+    name: "{{ item.name }}"
+    template: "download"
+    state: stopped
+    backing_store: "dir"
+    template_options: >
+      --dist {{ item.distro }}
+      --release {{ item.release }}
+      --arch {{ item.arch }}
+  register: cache_download
+  retries: 3
+  delay: 10
+  until: cache_download|success
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-download
+
+# This task runs several commands against the cached image to speed up the
+# lxc_container_create playbook.
+- name: Cached image preperation script
+  copy:
+    content: |
+      #!/usr/bin/env bash
+      {% for command in item.cache_commands %}
+      {{ command }}
+      {% endfor %}
+    dest: "/var/lib/lxc/{{ item.name }}/rootfs/tmp/cache-prep-commands.sh"
+    mode: "0755"
+  with_items: lxc_container_caches
+  when:
+    - item.cache_commands is defined
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Run cached image prep commands
+  command: "chroot /var/lib/lxc/{{ item.name }}/rootfs /tmp/cache-prep-commands.sh"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Create apt repos in the cached container
+  template:
+    src: sources.list.j2
+    dest: "/var/lib/lxc/{{ item.name }}/rootfs/etc/apt/sources.list"
+  with_items: lxc_container_caches
+  when: item.distro == "ubuntu"
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Cached image package script
+  copy:
+    content: |
+      #!/usr/bin/env bash
+      {{ item.install_command }} {{ item.cache_packages | join(' ') }}
+    dest: "/var/lib/lxc/{{ item.name }}/rootfs/tmp/cache-package-update.sh"
+    mode: "0755"
+  with_items: lxc_container_caches
+  when:
+    - item.install_command is defined
+    - item.cache_packages is defined
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Install cached image packages
+  command: "chroot /var/lib/lxc/{{ item.name }}/rootfs /tmp/cache-package-update.sh"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Adjust sshd configuration in container
+  lineinfile:
+    dest: "/var/lib/lxc/{{ item[0].name }}/rootfs/etc/ssh/sshd_config"
+    regexp: "{{ item[1].regexp }}"
+    line: "{{ item[1].line }}"
+    state: present
+  with_nested:
+    - lxc_container_caches
+    - lxc_cache_sshd_configuration
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: container image directory
+  file:
+    path: "{{ repo_service_home_folder }}/repo/lxc-images/{{ item.distro }}/{{ item.release }}/{{ item.name }}/{{ item.arch }}/{{ repo_lxc_image_tag }}"
+    state: "directory"
+    owner: "{{ repo_service_user_name }}"
+    group: "{{ repo_service_group_name }}"
+    mode: "2755"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Create lxc image
+  shell: |
+    tar -Opc -C /var/lib/lxc/{{ item.name }}/rootfs . | pxz -1 -T8 -D12 -c - > rootfs.tar.xz
+  args:
+    chdir: "{{ repo_service_home_folder }}/repo/lxc-images/{{ item.distro }}/{{ item.release }}/{{ item.name }}/{{ item.arch }}/{{ repo_lxc_image_tag }}"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Create meta directory
+  file:
+    path: "/var/lib/lxc/{{ item.name }}/meta"
+    state: "directory"
+    owner: "{{ repo_service_user_name }}"
+    group: "{{ repo_service_group_name }}"
+    mode: "2755"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-dirs
+
+- name: Create meta templates
+  template:
+    src: "lxc_cache/{{ item[1] }}.j2"
+    dest: "/var/lib/lxc/{{ item[0].name }}/meta/{{ item[1] }}"
+  with_nested:
+   - lxc_container_caches
+   - ["config-user", "config", "create-message", "excludes-user", "expiry", "templates"]
+  tags:
+    - repo-lxc-meta-templates
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Create lxc image meta
+  shell: |
+    tar -Opc -C /var/lib/lxc/{{ item.name }}/meta . | pxz -{{ repo_lxc_image_compression }} -T8 -D12 -c - > meta.tar.xz
+  args:
+    chdir: "{{ repo_service_home_folder }}/repo/lxc-images/{{ item.distro }}/{{ item.release }}/{{ item.name }}/{{ item.arch }}/{{ repo_lxc_image_tag }}"
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-update
+
+- name: Destroy base container
+  lxc_container:
+    name: "{{ item.name }}"
+    state: absent
+  register: cache_download
+  retries: 3
+  delay: 10
+  until: cache_download|success
+  with_items: lxc_container_caches
+  tags:
+    - repo-lxc-cache
+    - repo-lxc-cache-download
+
+- name: Create release index
+  copy:
+    content: |
+      {% for lxc_item in lxc_container_caches %}
+      {{ lxc_item.distro }};{{ lxc_item.release }};{{ lxc_item.arch }};{{ lxc_item.name }};{{ repo_lxc_image_tag }};/lxc-images/{{ lxc_item.distro }}/{{ lxc_item.release }}/{{ lxc_item.name }}/{{ lxc_item.arch }}/{{ repo_lxc_image_tag }}/
+      {% endfor %}
+    dest: "{{ repo_service_home_folder }}/repo/meta/1.0/{{ item }}"
+  with_items:
+    - 'index-system'
+    - 'index-user'
+  tags:
+    - repo-lxc-release-index
+    - repo-lxc-cache
+    - repo-lxc-cache-update

@@ -15,4 +15,3 @@
 
 - include: openstack-hosts-setup.yml
 - include: lxc-hosts-setup.yml
-- include: lxc-containers-create.yml

@@ -1,0 +1,7 @@
+Created an Ubuntu container (release={{ item[0].release }}, arch={{ item[0].arch }}, variant={{ item[0].variant }})
+
+For security reason, container images ship without user accounts
+and without a root password.
+
+Use lxc-attach or chroot directly into the rootfs to set a root password
+or create user accounts.

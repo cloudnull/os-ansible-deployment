@@ -1,0 +1,101 @@
+---
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Create container(s)
+  hosts: "repo-infra_hosts[0]"
+  max_fail_percentage: 20
+  gather_facts: false
+  user: root
+  roles:
+    - role: "lxc_image_cache"
+      lxc_image_compression: 0
+      lxc_image_cache_destroy: true
+      lxc_image_cache_index_create: false
+      lxc_image_cache_create: false
+      lxc_image_cache_host_preload: true
+      lxc_image_cache_base_container_destroy: false
+      lxc_image_pre_seed: true
+      lxc_image_tag: "repo-server"
+      tags:
+        - "lxc-image-index"
+  post_tasks:
+    - name: Create the root system user
+      user:
+        name: "root"
+        group: "root"
+        comment: "root"
+        shell: "/bin/bash"
+        system: "yes"
+        createhome: "yes"
+        home: "/root"
+        generate_ssh_key: "yes"
+      tags:
+        - repo-ssh-key
+
+    - name: Get public key contents and store as var
+      command: |
+        cat /root/.ssh/id_rsa.pub
+      register: pub_key
+      changed_when: false
+      tags:
+        - repo-ssh-key
+
+    - name: Register a fact for the nova pub key
+      set_fact:
+         repo_pubkey: "{{ pub_key.stdout }}"
+      tags:
+        - repo-ssh-key
+
+    - name: Create authorized keys file from host vars
+      authorized_key:
+        user: "root"
+        key: "{{ hostvars[item]['repo_pubkey'] }}"
+      with_items: groups['repo-infra_hosts']
+      tags:
+        - repo-ssh-key
+
+    - name: Sync the built base images to the repo hosts
+      synchronize:
+        src: "/var/cache/lxc"
+        mode: pull
+        dest: "/var/cache/lxc"
+        set_remote_user: False
+      delegate_to: "{{ groups['repo-infra_hosts'][0] }}"
+      with_items: groups['repo-infra_hosts']
+      when: item != groups['repo-infra_hosts'][0]
+      tags:
+        - base-lxc-cache
+  vars:
+    ansible_hostname: "{{ container_name }}"
+
+
+- name: Setup repo servers
+  hosts: repo_all
+  max_fail_percentage: 20
+  user: root
+  roles:
+    - role: "lxc_container_create"
+      lxc_container_fs_size: "{{ properties.container_fs_size|default('5G') }}"
+      lxc_container_template_options: >
+        --dist=ubuntu
+        --release=trusty
+        --arch=amd64
+        --variant=base-image
+        --no-validate
+        --force-cache
+      tags:
+        - "lxc-container-create"
+  tags:
+    - repo-infra-all

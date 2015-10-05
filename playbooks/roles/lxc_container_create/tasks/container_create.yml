@@ -58,14 +58,14 @@
   lxc_container:
     name: "{{ inventory_hostname }}"
     container_log: "true"
-    config: "{{ properties.container_config|default(lxc_container_config) }}"
-    template: "{{ properties.container_template|default(lxc_container_template) }}"
+    config: "{{ lxc_container_config }}"
+    template: "{{ lxc_container_template }}"
     state: started
-    backing_store: "{{ properties.container_backing_store|default(lxc_container_backing_store) }}"
+    backing_store: "{{ lxc_container_backing_store }}"
     directory: "{{ lxc_container_rootfs_directory }}"
-    fs_size: "{{ properties.container_fs_size|default(lxc_container_fs_size) }}"
-    fs_type: "{{ properties.container_fs_type|default(lxc_container_fs_type) }}"
-    vg_name: "{{ properties.container_vg_name|default(lxc_container_vg_name) }}"
+    fs_size: "{{ lxc_container_fs_size }}"
+    fs_type: "{{ lxc_container_fs_type }}"
+    vg_name: "{{ lxc_container_vg_name }}"
     template_options: "{{ lxc_container_template_options }}"
     container_command: |
       if [ -f  "/usr/lib/systemd/system/poweroff.target" ];then
@@ -184,19 +184,6 @@
 # Flush the handlers to ensure the container and networking is online.
 - meta: flush_handlers
 
-# Resets the container user's password using lxc_container because Python2.7
-#  may not be installed at this point.
-- name: Force container user password set
-  lxc_container:
-    name: "{{ inventory_hostname }}"
-    container_command: |
-      getent passwd "{{ lxc_container_user_name }}" &&
-      echo "{{ lxc_container_user_name }}:{{ lxc_container_user_password }}" | chpasswd
-  delegate_to: "{{ physical_host }}"
-  no_log: True
-  tags:
-    - lxc-container-user-password-regen
-
 # Setup proxy configs, this is done here to ensure that we have our container proxy setup
 #  prior to running online commands. This is using lxc_container because python2.7 may not be
 #  installed at this point.
@@ -212,3 +199,27 @@
   delegate_to: "{{ physical_host }}"
   tags:
     - lxc-container-proxy
+
+- name: Obtain the system's ssh public key
+  set_fact:
+    lxc_container_ssh_key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+  when:
+    - lxc_container_ssh_key is not defined
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - lxc-container-post-build
+
+- name: LXC post build complete
+  lxc_container:
+    name: "{{ inventory_hostname }}"
+    container_command: |
+      if [ ! -d "/root/.ssh" ];then
+        mkdir /root/.ssh
+      fi
+      echo "{{ lxc_container_ssh_key }}" | tee /root/.ssh/authorized_keys
+      sed -i 's/127\.0\.1\.1.*/127\.0\.1\.1 {{ inventory_hostname | replace('_', '-') }}/g' /etc/hosts
+      echo "{{ inventory_hostname | replace('_', '-') }}" | tee /etc/hostname
+      hostname $(cat /etc/hostname)
+  delegate_to: "{{ physical_host }}"
+  tags:
+    - lxc-container-post-build

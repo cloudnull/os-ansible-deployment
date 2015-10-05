@@ -90,3 +90,80 @@ repo_pip_packages:
 
 # Main web server port
 repo_server_port: 8181
+
+# Image compression should be an integer between 0 - 9
+repo_lxc_image_compression: 0
+repo_lxc_image_tag: untagged
+
+lxc_cache_sshd_configuration:
+    - { regexp: "^PermitRootLogin",         line: "PermitRootLogin yes" }
+    - { regexp: "^TCPKeepAlive",            line: "TCPKeepAlive yes" }
+    - { regexp: "^UseDNS",                  line: "UseDNS no" }
+    - { regexp: "^X11Forwarding",           line: "X11Forwarding no" }
+    - { regexp: "^PasswordAuthentication",  line: "PasswordAuthentication no" }
+
+# Prebuilt images to deploy onto hosts for use in containers.
+lxc_container_caches:
+  - distro: "ubuntu"
+    name: "base-image"
+    release: "trusty"
+    arch: "amd64"
+    main_apt_repo: "https://mirror.rackspace.com/ubuntu"
+    security_apt_repo: "https://mirror.rackspace.com/ubuntu"
+    cache_packages:
+      - openssh-server
+      - bridge-utils
+      - bsdmainutils
+      - build-essential
+      - cgmanager
+      - cgmanager-utils
+      - cgroup-lite
+      - comerr-dev
+      - curl
+      - debconf-utils
+      - debhelper
+      - dh-apparmor
+      - gettext
+      - gir1.2-glib-2.0
+      - git
+      - groff-base
+      - intltool-debian
+      - iptables
+      - iso-codes
+      - krb5-multidev
+      - libcgmanager-dev
+      - libdbus-1-dev
+      - libdbus-glib-1-2
+      - libdevmapper-event1.02.1
+      - libexpat1-dev
+      - libffi-dev
+      - libpq-dev
+      - libpq5
+      - libpython-dev
+      - libxml2-dev
+      - libxslt1-dev
+      - libxslt1.1
+      - lvm2
+      - python-apt
+      - python-apt-common
+      - python-dev
+      - python-pycurl
+      - python-software-properties
+      - python3-apt
+      - python3-dbus
+      - python3-gi
+      - python3-minimal
+      - python3-pycurl
+      - python3-software-properties
+      - software-properties-common
+      - sqlite3
+      - ssh
+      - sshpass
+      - time
+    cache_commands:
+      - apt-get update
+      - apt-get install -y apt-transport-https python2.7
+      - apt-get -y upgrade
+      - rm -f /usr/bin/python
+      - ln -s /usr/bin/python2.7 /usr/bin/python
+    install_command: "apt-get update && apt-get install -y"

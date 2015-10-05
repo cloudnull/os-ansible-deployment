@@ -16,7 +16,7 @@
 lxc_container_config: /etc/lxc/lxc-openstack.conf
 
 # Default container template to build from
-lxc_container_template: ubuntu
+lxc_container_template: download
 
 # lxc container rootfs directory and cache path
 lxc_container_directory: "/var/lib/lxc"
@@ -34,12 +34,18 @@ lxc_container_vg_name: lxc
 
 # Default image to build from
 lxc_container_release: trusty
-lxc_container_user_name: ubuntu
-lxc_container_user_password: "{{ lookup('pipe', 'date --rfc-3339=ns | sha512sum | base64 | head -c 32') }}"
+lxc_container_distro: ubuntu
+lxc_container_arch: amd64
+lxc_container_variant: default
+lxc_container_image_server: images.linuxcontainers.org
 lxc_container_template_options: >
-  --release {{ lxc_container_release }}
-  --user {{ lxc_container_user_name }}
-  --password {{ lxc_container_user_password }}
+  --dist={{ lxc_container_distro }}
+  --release={{ lxc_container_release }}
+  --arch={{ lxc_container_arch }}
+  --server={{ lxc_container_image_server }}
+  --variant={{ lxc_container_variant }}
+  --no-validate
+
 
 lxc_container_template_main_apt_repo: "https://mirror.rackspace.com/ubuntu"
 lxc_container_template_security_apt_repo: "https://mirror.rackspace.com/ubuntu"
