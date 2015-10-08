@@ -1,5 +1,5 @@
 ---
-# Copyright 2014, Rackspace US, Inc.
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,25 +15,17 @@
 
 galaxy_info:
   author: rcbops
-  description: Installation and setup of nova
+  description: Check if deprecated options are being defined
   company: Rackspace
   license: Apache2
-  min_ansible_version: 1.6.6
+  min_ansible_version: 1.9.2
   platforms:
     - name: Ubuntu
       versions:
         - trusty
   categories:
     - cloud
-    - python
-    - nova
+    - deprecation_check
     - development
     - openstack
-dependencies:
-  - role: deprecation_check
-    deprecated_items: "{{ nova_deprecated_items }}"
-    fatal_deprecations: "{{ nova_fatal_deprecations }}"
-  - apt_package_pinning
-  - galera_client
-  - openstack_openrc
-  - pip_lock_down
+dependencies: []

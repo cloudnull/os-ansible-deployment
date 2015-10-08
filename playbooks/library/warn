@@ -1,0 +1,19 @@
+DOCUMENTATION = """
+---
+module: fail
+short_description: Warn with custom message
+description:
+     - This module warns the progress with a custom message.
+version_added: "1.9.3"
+options:
+  msg:
+    description:
+      - The customized message used for emitting an warning.
+    required: true
+author: "Kevin Carter (kevin.carter@rackspace.com)"
+"""
+
+EXAMPLES = """
+# Example playbook using fail and when together
+- warn: msg="This is a warning message"
+"""

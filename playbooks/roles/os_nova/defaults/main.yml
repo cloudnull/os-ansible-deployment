@@ -342,3 +342,23 @@ nova_nova_conf_overrides: {}
 nova_rootwrap_conf_overrides: {}
 nova_api_paste_ini_overrides: {}
 nova_policy_overrides: {}
+
+
+## Set all options within this list that are deprecated and scheduled to be removed
+nova_deprecated_items:
+  - variable: nova_ec2_deprecated_but_enabled
+    future_release: liberty
+    future_usage: >
+      To continue deploying with an EC2 compatible API
+      use: https://github.com/stackforge/ec2-api
+  - variable: nova_v3_deprecated_but_enabled
+    future_release: liberty
+    future_usage: >
+      The nova v3 was deprecated in-favor of using version 2.1.
+      Set `nova_v21_enabled` to true or override the config using
+      the `nova_nova_conf_overrides` hash.
+  - variable: nova_s3_deprecated_but_enabled
+    future_release: liberty
+    future_usage: >
+      To continue deploying with an S3 compatible API
+      use: https://github.com/stackforge/swift3
