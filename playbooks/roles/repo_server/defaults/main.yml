@@ -65,8 +65,8 @@ repo_apt_packages:
   - libkmod-dev
   - libkrb5-dev
   - libkmod2
+  - libmariadbclient-dev
   - libvirt-dev
-  - libmysqlclient-dev
   - lxc-dev
   - lvm2
   - python-dev

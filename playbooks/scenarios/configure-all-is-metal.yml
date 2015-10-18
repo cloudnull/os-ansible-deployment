@@ -1,0 +1,217 @@
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Reconfigure the environment to run all on metal
+  hosts: localhost
+  connection: local
+  user: root
+  tasks:
+    - name: Update configs for running everything on metal
+      config_template:
+        src: "{{ local_config_path }}/etc/openstack_deploy/env.d/{{ item.name }}"
+        dest: "{{ local_config_path }}/etc/openstack_deploy/env.d/{{ item.name }}"
+        mode: "0644"
+        config_overrides: "{{ item.override }}"
+        config_type: "yaml"
+      with_items:
+        - name: aodh.yml
+          override: "{{ aodh_yaml_overrides }}"
+        - name: ceilometer.yml
+          override: "{{ ceilometer_yaml_overrides }}"
+        - name: cinder.yml
+          override: "{{ cinder_yaml_overrides }}"
+        - name: galera.yml
+          override: "{{ galera_yaml_overrides }}"
+        - name: glance.yml
+          override: "{{ glance_yaml_overrides }}"
+        - name: haproxy.yml
+          override: "{{ haproxy_yaml_overrides }}"
+        - name: heat.yml
+          override: "{{ heat_yaml_overrides }}"
+        - name: horizon.yml
+          override: "{{ horizon_yaml_overrides }}"
+        - name: keystone.yml
+          override: "{{ keystone_yaml_overrides }}"
+        - name: memcache.yml
+          override: "{{ memcache_yaml_overrides }}"
+        - name: neutron.yml
+          override: "{{ neutron_yaml_overrides }}"
+        - name: nova.yml
+          override: "{{ nova_yaml_overrides }}"
+        - name: pkg_repo.yml
+          override: "{{ pkg_repo_yaml_overrides }}"
+        - name: rabbitmq.yml
+          override: "{{ rabbitmq_yaml_overrides }}"
+        - name: rsyslog.yml
+          override: "{{ rsyslog_yaml_overrides }}"
+        - name: swift-remote.yml
+          override: "{{ swift_remote_yaml_overrides }}"
+        - name: swift.yml
+          override: "{{ swift_yaml_overrides }}"
+        - name: utility.yml
+          override: "{{ utility_yaml_overrides }}"
+  vars:
+    local_config_path: ../../
+    aodh_yaml_overrides:
+      container_skel:
+        aodh_container:
+          properties:
+            is_metal: true
+
+    ceilometer_yaml_overrides:
+      container_skel:
+        ceilometer_api_container:
+          properties:
+            is_metal: true
+        ceilometer_collector_container:
+          properties:
+            is_metal: true
+        metering-compute_container:
+          properties:
+            is_metal: true
+
+    cinder_yaml_overrides:
+      container_skel:
+        cinder_api_container:
+          properties:
+            is_metal: true
+        cinder_scheduler_container:
+          properties:
+            is_metal: true
+        cinder_volumes_container:
+          properties:
+            is_metal: true
+
+    galera_yaml_overrides:
+      container_skel:
+        galera_container:
+          properties:
+            is_metal: true
+
+    glance_yaml_overrides:
+      container_skel:
+        glance_container:
+          properties:
+            is_metal: true
+
+    haproxy_yaml_overrides:
+      container_skel:
+        haproxy_container:
+          properties:
+            is_metal: true
+
+    heat_yaml_overrides:
+      container_skel:
+        heat_apis_container:
+          properties:
+            is_metal: true
+        heat_engine_container:
+          properties:
+            is_metal: true
+
+    horizon_yaml_overrides:
+      container_skel:
+        horizon_container:
+          properties:
+            is_metal: true
+
+    keystone_yaml_overrides:
+      container_skel:
+        keystone_container:
+          properties:
+            is_metal: true
+
+    memcache_yaml_overrides:
+      container_skel:
+        memcached_container:
+          properties:
+            is_metal: true
+
+    neutron_yaml_overrides:
+      container_skel:
+        neutron_agents_container:
+          properties:
+            is_metal: true
+        neutron_server_container:
+          properties:
+            is_metal: true
+
+    nova_yaml_overrides:
+      container_skel:
+        nova_api_metadata_container:
+          properties:
+            is_metal: true
+        nova_api_os_compute_container:
+          properties:
+            is_metal: true
+        nova_cert_container:
+          properties:
+            is_metal: true
+        nova_compute_container:
+          properties:
+            is_metal: true
+        nova_conductor_container:
+          properties:
+            is_metal: true
+        nova_scheduler_container:
+          properties:
+            is_metal: true
+        nova_console_container:
+          properties:
+            is_metal: true
+
+    pkg_repo_yaml_overrides:
+      container_skel:
+        repo_container:
+          properties:
+            is_metal: true
+
+    rabbitmq_yaml_overrides:
+      container_skel:
+        rabbit_mq_container:
+          properties:
+            is_metal: true
+
+    rsyslog_yaml_overrides:
+      container_skel:
+        rsyslog_container:
+          properties:
+            is_metal: true
+
+    swift_remote_yaml_overrides:
+      container_skel:
+        swift_remote_container:
+          properties:
+            is_metal: true
+
+    swift_yaml_overrides:
+      container_skel:
+        swift_proxy_container:
+          properties:
+            is_metal: true
+        swift_acc_container:
+          properties:
+            is_metal: true
+        swift_obj_container:
+          properties:
+            is_metal: true
+        swift_cont_container:
+          properties:
+            is_metal: true
+
+    utility_yaml_overrides:
+      container_skel:
+        utility_container:
+          properties:
+            is_metal: true
