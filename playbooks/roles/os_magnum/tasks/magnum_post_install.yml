@@ -1,0 +1,53 @@
+---
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Get magnum command path
+  command: which magnum-api
+  register: magnum_command_path
+  when:
+    - not magnum_venv_enabled | bool
+  tags:
+    - magnum-command-bin
+
+- name: Set magnum command path
+  set_fact:
+    magnum_bin: "{{ magnum_command_path.stdout | dirname }}"
+  when:
+    - not magnum_venv_enabled | bool
+  tags:
+    - magnum-command-bin
+
+- name: Copy magnum config
+  config_template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ magnum_system_user_name }}"
+    group: "{{ magnum_system_group_name }}"
+    mode: "0644"
+    config_overrides: "{{ item.config_overrides }}"
+    config_type: "{{ item.config_type }}"
+  with_items:
+    - src: "magnum.conf.j2"
+      dest: "/etc/magnum/magnum.conf"
+      config_overrides: "{{ magnum_magnum_conf_overrides }}"
+      config_type: "ini"
+    - src: "policy.json"
+      dest: "/etc/magnum/policy.json.j2"
+      config_overrides: "{{ magnum_policy_overrides }}"
+      config_type: "json"
+  notify: Restart magnum services
+  tags:
+    - magnum-config
+    - magnum-post-install

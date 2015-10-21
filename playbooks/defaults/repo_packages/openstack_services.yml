@@ -99,3 +99,9 @@ nova_git_dest: "/opt/nova_{{ nova_git_install_branch | replace('/', '_') }}"
 swift_git_repo: https://git.openstack.org/openstack/swift
 swift_git_install_branch: 47eb6a37f86f29c355297b556c2ff898c98da9b2 # HEAD of "stable/liberty" as of 14.10.2015
 swift_git_dest: "/opt/swift_{{ swift_git_install_branch | replace('/', '_') }}"
+
+
+## magnum service
+magnum_git_repo: https://git.openstack.org/openstack/magnum
+magnum_git_install_branch: d59d4c24655a9f08a9ae723b8a6e73228143b8ee # HEAD of "stable/liberty" as of 14.10.2015
+magnum_git_dest: "/opt/magnum_{{ magnum_git_install_branch | replace('/', '_') }}"

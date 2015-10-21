@@ -1,0 +1,102 @@
+# {{ ansible_managed }}
+
+[DEFAULT]
+verbose = true
+debug = false
+fatal_deprecations = {{ magnum_fatal_deprecations }}
+
+pybasedir = {{ magnum_pybasedir }}
+bindir = {{ magnum_bin }}
+state_path = {{ magnum_system_user_home }}
+periodic_interval_max = 60
+service_down_time = 180
+host = {{ magnum_management_address }}
+
+notification_driver = messaging
+rpc_backend = rabbit
+
+
+[api]
+port = {{ magnum_service_port }}
+host = {{ magnum_management_address }}
+max_limit = 1000
+
+
+[bay_heat]
+max_attempts = 2000
+wait_interval = 1
+
+
+[conductor]
+topic = magnum-conductor
+conductor_life_check_timeout = 16
+
+
+[database]
+connection = mysql+pymysql://{{ magnum_galera_user }}:{{ magnum_container_mysql_password }}@{{ magnum_galera_address }}/{{ magnum_galera_database }}?charset=utf8
+max_overflow = {{ magnum_db_max_overflow }}
+max_pool_size = {{ magnum_db_max_pool_size }}
+pool_timeout = {{ magnum_db_pool_timeout }}
+
+
+[keystone_authtoken]
+insecure = {{ keystone_service_internaluri_insecure | bool }}
+auth_plugin = {{ magnum_keystone_auth_plugin }}
+signing_dir = {{ magnum_system_user_home }}/cache/api
+auth_url = {{ keystone_service_adminuri }}
+auth_uri = {{ keystone_service_internaluri }}
+project_domain_id = {{ magnum_service_project_domain_id }}
+user_domain_id = {{ magnum_service_user_domain_id }}
+project_name = {{ magnum_service_project_name }}
+username = {{ magnum_service_user_name }}
+password = {{ magnum_service_password }}
+
+memcached_servers = {{ memcached_servers }}
+
+token_cache_time = 300
+revocation_cache_time = 60
+
+# if your memcached server is shared, use these settings to avoid cache poisoning
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcached_encryption_key }}
+
+# if your keystone deployment uses PKI, and you value security over performance:
+check_revocations_for_cached = False
+
+
+[barbican_client]
+region_name = {{ magnum_service_region }}
+endpoint_type = {{ magnum_service_endpoint_type }}
+
+
+[glance_client]
+region_name = {{ magnum_service_region }}
+endpoint_type = {{ magnum_service_endpoint_type }}
+
+
+[heat_client]
+region_name = {{ magnum_service_region }}
+endpoint_type = {{ magnum_service_endpoint_type }}
+
+
+[magnum_client]
+region_name = {{ magnum_service_region }}
+endpoint_type = {{ magnum_service_endpoint_type }}
+
+
+[nova_client]
+region_name = {{ magnum_service_region }}
+endpoint_type = {{ magnum_service_endpoint_type }}
+
+
+[oslo_concurrency]
+lock_path = /var/lock/magnum
+
+
+
+[oslo_messaging_rabbit]
+rabbit_port = {{ rabbitmq_port }}
+rabbit_userid = {{ magnum_rabbitmq_userid }}
+rabbit_password = {{ magnum_rabbitmq_password }}
+rabbit_virtual_host = {{ magnum_rabbitmq_vhost }}
+rabbit_hosts = {{ rabbitmq_servers }}
