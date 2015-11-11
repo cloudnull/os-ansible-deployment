@@ -55,7 +55,7 @@ glance_git_dest: "/opt/glance_{{ glance_git_install_branch | replace('/', '_') }
 
 ## Heat service
 heat_git_repo: https://git.openstack.org/openstack/heat
-heat_git_install_branch: a4aafba0c2b387df888dfd805594b78b39b5f495 # HEAD of "stable/kilo" as of 21.10.2015
+heat_git_install_branch: 81de0a272cf7973047571bf7677052025647c192 # HEAD of "stable/kilo" as of 11.11.2015
 heat_git_dest: "/opt/heat_{{ heat_git_install_branch | replace('/', '_') }}"
 heat_repo_plugins:
   - { path: "contrib", package: "extraroute" }

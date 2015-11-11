@@ -1,5 +1,5 @@
 ---
-# Copyright 2014, Rackspace US, Inc.
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,5 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: repo-server.yml
-- include: repo-build.yml
+galaxy_info:
+  author: rcbops
+  description: Install package repo build
+  company: Rackspace
+  license: Apache2
+  min_ansible_version: 1.9.3
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+  categories:
+    - cloud
+    - python
+    - development
+    - openstack
+dependencies:
+  - apt_package_pinning
+  - pip_install

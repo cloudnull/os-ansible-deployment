@@ -1,5 +1,5 @@
 ---
-# Copyright 2014, Rackspace US, Inc.
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,5 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: repo-server.yml
-- include: repo-build.yml
+- name: Clone all upstream git repositories
+  git:
+    repo: "{{ item['url'] }}"
+    dest: "{{ repo_build_git_dir }}/{{ item['name'] }}"
+    clone: yes
+    update: yes
+    version: "{{ item['version'] }}"
+  with_items: local_packages.results.0.item.remote_package_parts
+  tags:
+    - repo-clone-repos

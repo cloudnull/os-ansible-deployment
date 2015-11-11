@@ -28,7 +28,7 @@
 ## Tempest service
 tempest_git_repo: https://git.openstack.org/openstack/tempest
 tempest_git_install_branch: d22ec33640affaeabd17c591599da86ffdf6d722 # HEAD of "master" as of 21.10.2015
-tempest_git_install_fragments: "yaprtignorerequirements=true"
+tempest_git_install_fragments: "ignorerequirements=true"
 tempest_git_dest: "/opt/tempest_{{ tempest_git_install_branch | replace('/', '_') }}"
 
 # NOVNC from source
@@ -40,3 +40,8 @@ novncproxy_git_dest: "/opt/novnc_{{ novncproxy_git_install_branch | replace('/',
 spicehtml5_git_repo: https://github.com/SPICE/spice-html5
 spicehtml5_git_install_branch: c1e736b083ff47639ecb73ea9be4d14b5002f93f # HEAD of "master" as of 21.10.2015
 spicehtml5_git_dest: "/opt/spicehtml5_{{ spicehtml5_git_install_branch | replace('/', '_') }}"
+
+# Pinned because any newer version will break within Kilo
+openstackclient_git_repo: https://git.openstack.org/openstack/python-openstackclient
+openstackclient_git_install_branch: e750e5784dcb4b58ef2359f9dded9064a92b58a3 # HEAD of "tag/1.0.4" as of 16.04.2015
+openstackclient_git_dest: "/opt/openstackclient_{{ openstackclient_git_install_branch | replace('/', '_') }}"

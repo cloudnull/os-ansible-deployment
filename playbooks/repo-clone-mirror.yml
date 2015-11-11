@@ -1,5 +1,5 @@
 ---
-# Copyright 2014, Rackspace US, Inc.
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,27 +17,52 @@
 # from within the environment as found from a given mirror_source_host.
 # Currently the mirror source host is set to the Rackspace build servers but
 # could be targeted to wherever you'd like.
+
 - name: Cloning the upstream repo mirror
   hosts: repo_all[0]
-  max_fail_percentage: 20
   gather_facts: false
   user: root
+  pre_tasks:
+    - name: Delete old MANIFEST file if found
+      file:
+        state: absent
+        path: /tmp/MANIFEST.in
   tasks:
+    - name: download MANIFEST.in
+      get_url:
+        url: "{{ repo_upstream_manifest_url }}"
+        dest: /tmp/MANIFEST.in
     - name: Sync the upstream repo(s)
       shell: |
-        rsync -avzlHAX \
-              {{ mirror_excludes }} \
-              {{ mirror_source_host }}::{{ mirror_name }} {{ mirror_path }}
+        {{ rsync_commands }} \
+              {{ rsync_flags }} \
+              --files-from=/tmp/MANIFEST.in \
+              {{ repo_upstream_url | netloc }}::{{ mirror_name }} {{ mirror_path }}
+      sudo: yes
+      sudo_user: "{{ repo_service_user_name }}"
+    - name: Create sync directories
+      file:
+        state: directory
+        path: "{{ mirror_path }}/{{ item }}"
+        owner: "{{ repo_service_user_name }}"
+      with_items: rsync_dirs
+    - name: Sync supporting directories
+      shell: |
+        {{ rsync_commands }} \
+              {{ rsync_flags }} \
+              {{ repo_upstream_url | netloc }}::{{ mirror_name }}/{{ item }}/ {{ mirror_path }}/{{ item }}
+      with_items: rsync_dirs
       sudo: yes
       sudo_user: "{{ repo_service_user_name }}"
   vars:
-    repo_mirror_excludes:
-      - "/repos"
-      - "/mirror"
-      - "/rpcgit"
-      - "/python_packages"
-    mirror_excludes: "{% for i in repo_mirror_excludes %} --exclude={{ i }} {% endfor %}"
+    rsync_commands: rsync
+    rsync_flags: "-avzlHAX"
+    rsync_dirs:
+      - container_images
+      - downloads
+      - "venvs/{{ openstack_release }}"
     mirror_path: "{{ repo_service_home_folder }}/repo"
-    mirror_name: "{{ repo_mirror_name|default('openstack_mirror') }}"
-    mirror_source_host: "{{ repo_mirror_source_host|default('rpc-repo.rackspace.com') }}"
-    is_metal: "{{ properties.is_metal|default(false) }}"
+    mirror_name: "openstack_mirror"
+    repo_upstream_url: "https://rpc-repo.rackspace.com"
+    repo_upstream_manifest_url: "{{ repo_upstream_url }}/os-releases/{{ openstack_release }}/MANIFEST.in"
+    repo_service_user_name: nginx

@@ -1,5 +1,5 @@
 ---
-# Copyright 2014, Rackspace US, Inc.
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,5 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- include: repo-server.yml
-- include: repo-build.yml
+# Wheel building
+- include: repo_clone_git.yml
+- include: repo_set_facts.yml
+- include: repo_pre_build.yml
+- include: repo_build.yml
+- include: repo_post_build.yml
+
+# Venv building
+- include: repo_venv.yml
+  when: repo_build_venv_create | bool
+  tags:
+    - repo-build-venvs
