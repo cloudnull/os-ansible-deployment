@@ -197,7 +197,7 @@ dashboard_hosts:
   infra3:
     ip: 172.29.236.13
 
-# neutron server, agents (L3, etc)
+# neutron server
 network_hosts:
   infra1:
     ip: 172.29.236.11

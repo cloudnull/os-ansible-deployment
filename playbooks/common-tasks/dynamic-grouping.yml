@@ -17,7 +17,7 @@
   add_host:
     group: "{{ dest_group }}"
     name: "{{ item }}"
-  with_items: "{{ groups[src_group] }}"
+  with_items: "{{ group_subset | default(groups[src_group]) }}"
   when:
     - "group_when | default(True)"
   tags:

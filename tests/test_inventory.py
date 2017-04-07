@@ -317,6 +317,7 @@ class TestAnsibleInventoryFormatConstraints(unittest.TestCase):
         'network_containers',
         'network_hosts',
         'neutron_agent',
+        'neutron_agents',
         'neutron_agents_container',
         'neutron_all',
         'neutron_bgp_dragent',

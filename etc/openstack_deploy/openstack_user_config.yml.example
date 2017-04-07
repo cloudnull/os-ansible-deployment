@@ -764,4 +764,3 @@
 # address is ``193.0.14.129``. To change this default,
 # set the ``keepalived_ping_address`` variable in the
 # ``user_variables.yml`` file.
-
