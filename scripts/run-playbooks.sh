@@ -79,12 +79,12 @@ function playbook_run {
     echo -e "${root_include}" > root-include-playbook.yml
     root_include_file_name="$(get_include_file root-include-playbook.yml)"
 
-    # Once setup-hosts is complete, we should gather facts for everything
-    # (now including containers) so that the fact cache is complete for the
-    # remainder of the run.
+    # Once setup-hosts is complete, we should gather facts for hosts
+    # so that the fact cache is complete for the remainder of the run.
     if [[ "${root_include_file_name}" == "setup-infrastructure.yml" ]]; then
-      ansible -m setup -a "gather_subset=network,hardware,virtual" all
+      ansible -m setup -a "gather_subset=network,hardware,virtual" hosts
     fi
+
     for include in $(get_includes "${root_include_file_name}"); do
       echo -e "${include}" > /tmp/include-playbook.yml
       include_file_name="$(get_include_file /tmp/include-playbook.yml)"

@@ -15,15 +15,20 @@ auto eth0.10
 iface eth0.10 inet manual
     vlan-raw-device eth0
 
+# Storage network VLAN interface (optional)
+auto eth0.20
+iface eth0.20 inet manual
+    vlan-raw-device eth0
+
 # OpenStack Networking VXLAN (tunnel/overlay) VLAN interface
 auto eth0.30
 iface eth0.30 inet manual
     vlan-raw-device eth0
 
-# Storage network VLAN interface (optional)
-auto eth0.20
-iface eth0.20 inet manual
-    vlan-raw-device eth0
+# OpenStack Networking flat interface
+auto bond1.40
+iface bond1.40 inet manual
+    vlan-raw-device bond1
 
 # Container/Host management bridge
 auto br-mgmt
@@ -75,30 +80,31 @@ iface br-vlan inet manual
     bridge_fd 0
     bridge_ports eth0
 
-# compute1 Network VLAN bridge
-#auto br-vlan
-#iface br-vlan inet manual
-#    bridge_stp off
-#    bridge_waitport 0
-#    bridge_fd 0
-#
-# For tenant vlan support, create a veth pair to be used when the neutron
+# OpenStack Networking flat bridge
+auto br-flat
+iface br-flat inet manual
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    bridge_ports bond1.40
+
+# For tenant flat networking, create a veth pair to be used when the neutron
 # agent is not containerized on the compute hosts. 'eth12' is the value used on
-# the host_bind_override parameter of the br-vlan network section of the
+# the host_bind_override parameter of the br-flat network section of the
 # openstack_user_config example file. The veth peer name must match the value
 # specified on the host_bind_override parameter.
 #
 # When the neutron agent is containerized it will use the container_interface
-# value of the br-vlan network, which is also the same 'eth12' value.
+# value of the br-flat network, which is also the same 'eth12' value.
 #
 # Create veth pair, do not abort if already exists
-#    pre-up ip link add br-vlan-veth type veth peer name eth12 || true
+#    pre-up ip link add br-flat-veth type veth peer name eth12 || true
 # Set both ends UP
-#    pre-up ip link set br-vlan-veth up
+#    pre-up ip link set br-flat-veth up
 #    pre-up ip link set eth12 up
 # Delete veth pair on DOWN
-#    post-down ip link del br-vlan-veth || true
-#    bridge_ports eth0 br-vlan-veth
+#    post-down ip link del br-flat-veth || true
+#    bridge_ports bond1.40 br-flat-veth
 
 # Storage bridge (optional)
 #

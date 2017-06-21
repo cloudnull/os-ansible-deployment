@@ -16,12 +16,21 @@
 # (c) 2016 Donovan Francesco <donovan.francesco@is.co.za>
 # (c) 2016 Paul Stevens <paul.stevens@is.co.za>
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "designate_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install designate server
   hosts: designate_all
   gather_facts: "{{ gather_facts | default(True) }}"
   user: root
   pre_tasks:
     - include: common-tasks/os-lxc-container-setup.yml
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/rabbitmq-vhost-user.yml
       static: no
       vars:

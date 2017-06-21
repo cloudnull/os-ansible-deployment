@@ -1,0 +1,192 @@
+---
+# Copyright 2014, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather nspawn containers
+  hosts: "{{ container_group }}"
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Create group of nspawn hosts
+      add_host:
+        name: "{{ hostvars[item]['physical_host'] }}"
+        groups: nspawn_host_group
+      when: >
+        hostvars[item]['physical_host'] == hostvars[item]['container_name'] or
+        (hostvars[item]['is_metal'] | default(false) | bool)
+      with_items: "{{ groups[container_group] }}"
+
+    - name: Create group of nspawn containers
+      add_host:
+        name: "{{ hostvars[item]['container_name'] }}"
+        groups: nspawn_container_group
+      when:
+        - hostvars[item]['physical_host'] != hostvars[item]['container_name']
+      with_items: "{{ groups[container_group] }}"
+
+- name: Gather nspawn container host facts
+  hosts: "nspawn_host_group"
+  gather_facts: true
+
+- name: Create container(s)
+  hosts: "nspawn_container_group"
+  gather_facts: false
+  max_fail_percentage: 20
+  user: root
+  tasks:
+    - name: Clone the base container image
+      shell: |
+        if ! machinectl image-status "{{ inventory_hostname }}"; then
+          machinectl clone "{{ container_image.name }}" "{{ inventory_hostname }}"
+          exit 3
+        fi
+      register: clone_image
+      changed_when: clone_image.rc == 3
+      failed_when: not clone_image.rc in [0, 3]
+      delegate_to: "{{ physical_host }}"
+
+    - name: Container service directories
+      file:
+        path: "{{ item }}"
+        state: "directory"
+      with_items:
+        - "/openstack/{{ inventory_hostname }}"
+        - "/openstack/backup/{{ inventory_hostname }}"
+        - "/openstack/log/{{ inventory_hostname }}"
+      delegate_to: "{{ physical_host }}"
+
+    - name: Container service directories
+      file:
+        path: "/var/lib/machines/{{ inventory_hostname }}/{{ item.container_directory }}"
+        state: "directory"
+      with_items: "{{ container_default_bind_mounts | union(container_bind_mounts) }}"
+      delegate_to: "{{ physical_host }}"
+
+    - name: Copy container config
+      copy:
+        content: |
+          [Exec]
+          Boot=on
+
+          [Files]
+          Bind=/openstack/backup/{{ inventory_hostname }}:/var/backup
+          Bind=/openstack/log/{{ inventory_hostname }}:/var/log
+          {% for bind in container_default_bind_mounts | union(container_bind_mounts) %}
+          Bind={{ host_directory }}:{{ container_directory }}
+          {% endfor %}
+          {% for key, value in deployment_environment_variables.items() %}
+          Environment={{ key }}={{ value }}
+          {% endfor %}
+
+          [Network]
+          {% set macvlans = [] %}
+          {% set _ = container_networks.update({'container': {'bridge':'br-container'}}) %}
+          {% for key, value in container_networks.items() %}
+          {%   set _ = macvlans.append('mv-' + value.bridge.split('br-')[-1]) %}
+          {% endfor %}
+          MACVLAN={{ macvlans | unique | join(' ') }}
+        dest: "/etc/systemd/nspawn/{{ inventory_hostname }}.nspawn"
+      delegate_to: "{{ physical_host }}"
+
+    - name: Copy container interface config
+      copy:
+        content: |
+          [Match]
+          Name=mv-mv-{{ item.value.bridge.split('br-')[-1] }}
+
+          {% if item.value.address is defined %}
+          [Address]
+          {% set addr_cidr = (item.value.address | string + '/' + item.value.netmask | string) | ipaddr('prefix') %}
+          Address={{ item.value.address }}/{{ addr_cidr }}
+          {% else %}
+          [DHCP]
+          UseDNS=yes
+          UseNTP=yes
+          RouteMetric=20
+          {% endif %}
+
+          {% if item.value.static_routes is defined %}
+          [Route]
+          {%   for route in item.value.static_routes %}
+          Source={{ route['cidr'] }}
+          Gateway={{ route['gateway'] }}
+          {%   endfor %}
+          {% endif %}
+
+          {% if item.value.gateway is defined %}
+          [Network]
+          Gateway={{ item.value.gateway }}
+          {% elif item.value.address is undefined %}
+          [Network]
+          DHCP=yes
+          {% endif %}
+
+          {% if item.value.mtu is defined %}
+          [Link]
+          MTUBytes={{ item.value.mtu }}
+          {% endif %}
+
+        dest: "/var/lib/machines/{{ inventory_hostname }}/etc/systemd/network/mv-mv-{{ item.value.bridge.split('br-')[-1] }}.network"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      delegate_to: "{{ physical_host }}"
+
+    - name: Create localhost config
+      lineinfile:
+        dest: "/var/lib/machines/{{ inventory_hostname }}/etc/hosts"
+        regexp: "^127.0.0.1"
+        line: "127.0.0.1 localhost"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      remote_user: root
+      delegate_to: "{{ physical_host }}"
+
+    - name: Create domain config
+      lineinfile:
+        dest: "/var/lib/machines/{{ inventory_hostname }}/etc/hosts"
+        regexp: "^127.0.1.1"
+        line: "127.0.1.1 {{ inventory_hostname | replace('_', '-') }}.{{ container_domain }} {{ inventory_hostname | replace('_', '-') }}"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      remote_user: root
+      delegate_to: "{{ physical_host }}"
+
+    - name: Create hostname
+      copy:
+        dest: "/var/lib/machines/{{ inventory_hostname }}/etc/hostname"
+        content: "{{ inventory_hostname | replace('_', '-') }}"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      remote_user: root
+      delegate_to: "{{ physical_host }}"
+
+    - name: Start new container
+      shell: |
+        if ! machinectl status "{{ inventory_hostname }}"; then
+          machinectl start "{{ inventory_hostname }}"
+        fi
+      register: image_start
+      changed_when: image_start.rc == 3
+      failed_when: not image_start.rc in [0, 3]
+      delegate_to: "{{ physical_host }}"
+  post_tasks:
+    - name: Wait for container connectivity
+      wait_for_connection:
+        delay: 3
+        timeout: 60
+  environment: "{{ deployment_environment_variables }}"
+  tags:
+    - nspawn-containers-create

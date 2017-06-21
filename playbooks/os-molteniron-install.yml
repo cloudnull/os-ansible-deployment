@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "molteniron_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Installation and setup of molteniron
   hosts: molteniron_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -22,6 +29,8 @@
       vars:
         extra_container_config_no_restart:
           - "lxc.start.order=79"
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/os-log-dir-setup.yml
       vars:
         log_dirs:

@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "utility_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Setup the utility location(s)
   hosts: utility_all
   max_fail_percentage: 20
@@ -20,6 +27,8 @@
   pre_tasks:
 
     - include: common-tasks/os-lxc-container-setup.yml
+      when:
+        - container_type == 'lxc'
 
     - include: common-tasks/os-log-dir-setup.yml
       vars:

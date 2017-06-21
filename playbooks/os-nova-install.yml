@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "nova_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Installation and setup of Nova
   hosts: nova_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -26,6 +33,8 @@
       vars:
         extra_container_config_no_restart:
           - "lxc.start.order=69"
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/rabbitmq-vhost-user.yml
       static: no
       vars:
@@ -100,6 +109,7 @@
         'added' in device_add.stdout.lower()
       delegate_to: "{{ physical_host }}"
       when:
+        - container_type == 'lxc'
         - "inventory_hostname in groups['nova_compute']"
         - "not is_metal | bool"
       tags:
@@ -109,6 +119,7 @@
         lxc-device -n {{ container_name }} add /dev/net/tun /dev/net/tun
       delegate_to: "{{ physical_host }}"
       when:
+        - container_type == 'lxc'
         - "inventory_hostname in groups['nova_compute']"
         - "not is_metal | bool"
       tags:
@@ -132,6 +143,7 @@
       changed_when: >
         'added' in device_add.stdout.lower()
       when:
+        - container_type == 'lxc'
         - "inventory_hostname in groups['nova_compute']"
         - "not is_metal | bool"
         - kvm_device.stat.ischr is defined and kvm_device.stat.ischr

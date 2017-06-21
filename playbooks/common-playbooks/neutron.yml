@@ -32,19 +32,19 @@
       include: ../common-tasks/os-lxc-container-setup.yml
       vars:
         aa_profile: "unconfined"
-        list_of_bind_mounts:
-          - bind_dir_path: "{{ (ansible_pkg_mgr == 'apt') | ternary('/lib/modules', '/usr/lib/modules') }}"
-            mount_path: "{{ (ansible_pkg_mgr == 'apt') | ternary('/lib/modules', '/usr/lib/modules') }}"
+        list_of_bind_mounts: "{{ neutron_container_bind_mounts }}"
         extra_container_config:
           - "lxc.cgroup.devices.allow=a *:* rmw"
         extra_container_config_no_restart:
           - "lxc.start.order=79"
       when:
+        - container_type == 'lxc'
         - "'neutron_agent' in group_names"
 
     - name: Configure container (other services)
       include: ../common-tasks/os-lxc-container-setup.yml
       when:
+        - container_type == 'lxc'
         - "'neutron_agent' not in group_names"
 
     - name: Configure log directories (on metal)

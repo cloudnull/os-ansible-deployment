@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "rabbitmq_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Create and configure rabbitmq container
   hosts: "{{ rabbitmq_host_group | default('rabbitmq_all') }}"
   serial: 1
@@ -25,6 +32,9 @@
       vars:
         extra_container_config_no_restart:
           - "lxc.start.order=99"
+      when:
+        - container_type == 'lxc'
+
     - include: common-tasks/package-cache-proxy.yml
   roles:
     - role: "system_crontab_coordination"

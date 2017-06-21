@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "gnocchi_all"
+    container_bind_mounts: "{{ (gnocchi_storage_driver == 'file' and gnocchi_storage_driver is undefined) | ternary(gnocchi_container_bind_mounts, []) }}"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install Gnocchi components
   hosts: gnocchi_all
   max_fail_percentage: 20
@@ -22,10 +30,13 @@
       static: no
       vars:
         list_of_bind_mounts: "{{ gnocchi_container_bind_mounts }}"
-      when: (gnocchi_storage_driver == "file") or (gnocchi_storage_driver is not defined)
+      when:
+        - container_type == 'lxc'
+        - (gnocchi_storage_driver == "file") or (gnocchi_storage_driver is not defined)
     - include: common-tasks/os-lxc-container-setup.yml
       static: no
       when:
+        - container_type == 'lxc'
         - gnocchi_storage_driver is defined
         - gnocchi_storage_driver != "file"
     - include: common-tasks/os-log-dir-setup.yml

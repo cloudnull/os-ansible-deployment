@@ -58,3 +58,7 @@ repo_build_pip_no_binary:
 # Set the build tag and the repo version
 repo_build_release_tag: "{{ openstack_release }}"
 repo_build_os_distro_version: "{{ os_distro_version }}"
+
+repo_container_bind_mounts:
+  - mount_path: "/openstack/{{ inventory_hostname }}"
+    bind_dir_path: "/var/www"

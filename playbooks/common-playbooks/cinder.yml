@@ -52,6 +52,7 @@
         extra_container_config_no_restart:
           - "lxc.start.order=79"
       when:
+        - container_type == 'lxc'
         - "'cinder_volume' in group_names"
         - "cinder_backend_lvm_inuse | bool"
 
@@ -59,6 +60,7 @@
       include: ../common-tasks/os-lxc-container-setup.yml
       static: no
       when:
+        - container_type == 'lxc'
         - "'cinder_volume' not in group_names"
 
     - name: Configure log directories (on metal)
@@ -84,6 +86,7 @@
         {% endif %}
       with_dict: "{{ cinder_backends | default({}) }}"
       when:
+        - container_type == 'lxc'
         - physical_host != container_name
         - cinder_backend_lvm_inuse | bool
       delegate_to: "{{ physical_host }}"

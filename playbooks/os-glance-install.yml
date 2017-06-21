@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "glance_all"
+    container_bind_mounts: "{{ (glance_default_store == 'file' and glance_nfs_client is undefined) | ternary(glance_container_bind_mounts, []) }}"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install glance server
   hosts: glance_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -24,11 +32,14 @@
       vars:
         list_of_bind_mounts: "{{ glance_container_bind_mounts }}"
       when:
+        - container_type == 'lxc'
         - glance_default_store == "file"
         - (glance_nfs_client is not defined) or (glance_nfs_client | length == 0)
     - include: common-tasks/os-lxc-container-setup.yml
       static: no
-      when: (glance_default_store != "file") or (glance_nfs_client is defined)
+      when:
+        - container_type == 'lxc'
+        - (glance_default_store != "file") or (glance_nfs_client is defined)
     - include: common-tasks/rabbitmq-vhost-user.yml
       static: no
       vars:

@@ -171,3 +171,7 @@ debug: false
 
 # Keepalived default IP address used to check its alive status (IPv4 only)
 # keepalived_ping_address: "193.0.14.129"
+
+# Set the container type. Options are "lxc" and "nspawn"
+# BEFORE THIS MERGES THIS OPTION SHOULD BE SET TO "lxc".
+container_type: nspawn

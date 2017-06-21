@@ -21,7 +21,7 @@ global_overrides:
     - network:
         container_bridge: "br-mgmt"
         container_type: "veth"
-        container_interface: "eth1"
+        container_interface: "{{ container_mgmt_interface | default('eth1') }}"
         ip_from_q: "container"
         type: "raw"
         group_binds:
@@ -32,7 +32,7 @@ global_overrides:
     - network:
         container_bridge: "br-vxlan"
         container_type: "veth"
-        container_interface: "eth10"
+        container_interface: "{{ container_vxlan_interface | default('eth10') }}"
         ip_from_q: "tunnel"
         type: "vxlan"
         range: "1:1000"
@@ -40,9 +40,9 @@ global_overrides:
         group_binds:
           - neutron_linuxbridge_agent
     - network:
-        container_bridge: "br-vlan"
+        container_bridge: "br-flat"
         container_type: "veth"
-        container_interface: "eth12"
+        container_interface: "{{ container_flat_interface | default('eth12') }}"
         host_bind_override: "eth12"
         type: "flat"
         net_name: "flat"
@@ -51,7 +51,7 @@ global_overrides:
     - network:
         container_bridge: "br-vlan"
         container_type: "veth"
-        container_interface: "eth11"
+        container_interface: "{{ container_vlan_interface | default('eth11') }}"
         type: "vlan"
         range: "1:1"
         net_name: "vlan"
@@ -60,7 +60,7 @@ global_overrides:
     - network:
         container_bridge: "br-storage"
         container_type: "veth"
-        container_interface: "eth2"
+        container_interface: "{{ container_storage_interface | default('eth2') }}"
         ip_from_q: "storage"
         type: "raw"
         group_binds:

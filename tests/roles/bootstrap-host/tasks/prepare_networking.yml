@@ -103,6 +103,7 @@
     - br-storage
     - br-vlan
     - br-vxlan
+    - br-flat
   tags:
     - networking-interfaces-stop
 
@@ -132,6 +133,7 @@
     - br-storage
     - br-vlan
     - br-vxlan
+    - br-flat
   tags:
     - networking-interfaces-start
 

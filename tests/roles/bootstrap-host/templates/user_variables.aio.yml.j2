@@ -101,3 +101,8 @@ tempest_run: yes
 # Disable chronyd in OpenStack CI
 security_rhel7_enable_chrony: no
 {% endif %}
+
+# Set the container type. Options are "lxc" and "nspawn"
+# BEFORE THIS MERGES THIS OPTION SHOULD BE SET TO "lxc".
+container_type: {{ container_type }}
+

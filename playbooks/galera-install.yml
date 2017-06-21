@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "galera_all"
+    container_bind_mounts: "{{ galera_container_bind_mounts }}"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Galera container config
   hosts: galera_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -30,6 +38,8 @@
         list_of_bind_mounts: "{{ galera_container_bind_mounts }}"
         extra_container_config_no_restart:
           - "lxc.start.order=99"
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/package-cache-proxy.yml
   vars:
     is_metal: "{{ properties.is_metal|default(false) }}"

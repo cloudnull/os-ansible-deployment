@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "keystone_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Prepare MQ/DB services
   hosts: keystone_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -87,7 +94,8 @@
       vars:
         extra_container_config_no_restart:
           - "lxc.start.order=89"
-
+      when:
+        - container_type == 'lxc'
     - name: Configure log directories (on metal)
       include: common-tasks/os-log-dir-setup.yml
       vars:

@@ -17,3 +17,7 @@ rsyslog_server_storage_directory: /var/log/log-storage
 
 # Ensure that the package state matches the global setting
 rsyslog_package_state: "{{ package_state }}"
+
+rsyslog_container_bind_mounts:
+  - bind_dir_path: "{{ rsyslog_server_storage_directory }}"
+    mount_path: "/openstack/{{ inventory_hostname }}/log-storage"

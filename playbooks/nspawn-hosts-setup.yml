@@ -1,0 +1,335 @@
+---
+# Copyright 2014, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Basic nspawn host setup
+  hosts: "{{ nspawn_host_group | default('nspawn_hosts')}}"
+  gather_facts: "{{ gather_facts | default(True) }}"
+  max_fail_percentage: 20
+  user: root
+  pre_tasks:
+    - name: Install apt packages
+      apt:
+        name: "{{ item }}"
+        state: "{{ nova_package_state }}"
+        update_cache: yes
+        cache_valid_time: "{{ cache_timeout }}"
+      with_items: "{{ container_host_distro_packages }}"
+
+    - name: start networkd
+      systemd:
+        name: "systemd-networkd"
+        state: "started"
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Create the log aggregation parent directory
+      file:
+        path: "/openstack/log"
+        state: directory
+
+    - name: Create nspawn config directory
+      file:
+        path: "/etc/systemd/nspawn"
+        state: directory
+
+    - name: Create network config directory
+      file:
+        path: "/etc/systemd/network"
+        state: directory
+
+    - name: Link resolved to resolve.conf
+      file:
+        src: "/run/systemd/resolve/resolv.conf"
+        dest: "/etc/resolv.conf"
+        state: "link"
+        force: "yes"
+      register: resolved
+
+    - name: Start systemd-resolved
+      systemd:
+        name: "systemd-resolved"
+        state: "restarted"
+        enabled: yes
+        daemon_reload: yes
+      when:
+        - resolved | changed
+
+    - name: Create psuedo interface bridge
+      copy:
+        content: |
+          [NetDev]
+          Name={{ item.value.bridge }}
+          Kind=bridge
+        dest: "/etc/systemd/network/{{ item.value.bridge }}.netdev"
+      with_dict: "{{ container_networks }}"
+      register: bridge_netdev
+
+    - name: Create macvlan bridge
+      copy:
+        content: |
+          [NetDev]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}
+          Kind=macvlan
+
+          [MACVLAN]
+          Mode=bridge
+        dest: "/etc/systemd/network/mv-{{ item.value.bridge.split('br-')[-1] }}.netdev"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      register: mv_bridge_netdev
+
+    - name: Create macvlan bridge
+      copy:
+        content: |
+          [Match]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}
+
+          [Network]
+          DHCP=no
+        dest: "/etc/systemd/network/mv-{{ item.value.bridge.split('br-')[-1] }}.network"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      register: mv_bridge_network
+
+    - name: Create macvlan bridge veths
+      copy:
+        content: |
+          [NetDev]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}-v1
+          Kind=veth
+
+          [Peer]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}-v2
+        dest: "/etc/systemd/network/mv-{{ item.value.bridge.split('br-')[-1] }}-vs.netdev"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      register: mv_veths
+
+    - name: Plugin bridge veth1 into bridge
+      copy:
+        content: |
+          [Match]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}-v1
+
+          [Network]
+          Bridge={{ item.value.bridge }}
+        dest: "/etc/systemd/network/mv-{{ item.value.bridge.split('br-')[-1] }}-v1.network"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      register: mv_veth1
+
+    - name: Plugin bridge veth2 into mv-bridge
+      copy:
+        content: |
+          [Match]
+          Name=mv-{{ item.value.bridge.split('br-')[-1] }}-v2
+
+          [Network]
+          MACVLAN=mv-{{ item.value.bridge.split('br-')[-1] }}
+        dest: "/etc/systemd/network/mv-{{ item.value.bridge.split('br-')[-1] }}-v2.network"
+      with_dict: "{{ container_networks | combine({'container': {'bridge': 'br-container'}}) }}"
+      register: mv_veth2
+
+    - name: Drop br-container interface netdev
+      copy:
+        content: |
+          [Link]
+          MACAddressPolicy=persistent
+        dest: "/etc/systemd/network/99-default.link"
+      register: network_link
+
+    - name: Drop dummy interface netdev
+      copy:
+        content: |
+          [NetDev]
+          Name=dummy0
+          Kind=dummy
+        dest: "/etc/systemd/network/00-dummy0.netdev"
+      register: dummy_netdev
+
+    - name: Drop dummy interface network
+      copy:
+        content: |
+          [Match]
+          Name=dummy0
+
+          [Network]
+          Bridge=br-container
+        dest: "/etc/systemd/network/00-dummy0.network"
+      register: dummy_network
+
+    - name: Drop br-container interface netdev
+      copy:
+        content: |
+          [NetDev]
+          Name=br-container
+          Kind=bridge
+        dest: "/etc/systemd/network/br-container.netdev"
+      register: interface_netdev
+
+    - name: Drop br-container interface network
+      copy:
+        content: |
+          [Match]
+          Name=br-container
+
+          [Network]
+          Address=10.0.3.2/24
+          Gateway=10.0.3.1
+          IPForward=yes
+          IPMasquerade=yes
+          DHCPServer=yes
+
+          [DHCPServer]
+          PoolOffset=25
+          PoolSize=100
+          DefaultLeaseTimeSec=3h
+          EmitTimezone=yes
+          EmitNTP=yes
+          EmitDNS=yes
+
+        dest: "/etc/systemd/network/br-container.network"
+      register: interface_network
+
+    - name: restart networkd
+      systemd:
+        name: "systemd-networkd"
+        state: "restarted"
+        enabled: yes
+        daemon_reload: yes
+      when: >
+        interface_netdev | changed or
+        interface_network | changed or
+        network_link | changed or
+        dummy_netdev | changed or
+        dummy_network | changed or
+        mv_bridge_netdev | changed or
+        mv_bridge_network | changed or
+        mv_veths | changed or
+        mv_veth1 | changed or
+        mv_veth2 | changed or
+        bridge_netdev | changed
+
+    - block:
+        - name: Create machined proxy override unit directories
+          file:
+            path: "/etc/systemd/system/{{ item }}"
+            owner: root
+            group: root
+            mode: '0755'
+            state: directory
+          with_items:
+            - systemd-machined.service.d
+            - systemd-importd.service.d
+
+        - name: Drop the machined proxy override units
+          copy:
+            content: |
+              [Service]
+              {% for key, value in deployment_environment_variables.iteritems() %}
+              Environment={{ key }}={{ value }}
+              {% endfor %}
+            dest: /etc/systemd/system/{{ item }}/proxy.conf
+            owner: root
+            group: root
+            mode: '0644'
+          with_items:
+            - systemd-machined.service.d
+            - systemd-importd.service.d
+      when: deployment_environment_variables.keys() | length > 0
+
+    - name: Remove old image cache
+      command: "/bin/machinectl remove {{ container_base_name }}"
+      register: cache_refresh
+      changed_when: cache_refresh.rc == 0
+      failed_when: cache_refresh.rc not in [0, 1]
+      when:
+        - container_image_cache_refresh | bool
+
+    # NOTE(cloudnull): When modern SystemD is running everywhere this can be
+    #  collapsed back into the base preparation task file. Also in production
+    #  the volume hosting /var/lib/machines should be probably be a LV or
+    #  physical drive.
+    - name : Set volume size
+      command: "/bin/machinectl set-limit {{ container_host_machine_volume_size }}"
+      changed_when: false
+
+    - name: Retrieve base image
+      command: >-
+        machinectl
+        --verify=no
+        {{ container_pull_mode }}
+        {{ container_image.url }}
+        {{ container_image.name }}
+      register: pull_image
+      until: pull_image | success
+      retries: 3
+      delay: 1
+      changed_when: pull_image.rc == 0
+      failed_when:
+        - pull_image.rc != 0
+        - "'failed' in pull_image.stderr | lower"
+
+    - name: Generate apt keys from host for the container cache
+      shell: apt-key exportall > /var/lib/machines/{{ container_image.name }}/root/repo.keys
+      changed_when: False
+
+    - name: Rsyncing files from the host into the container
+      shell: |
+        if [[ -e "{{ item }}" ]]; then
+          rsync -avL "{{ item }}" "/var/lib/machines/{{ container_image.name }}/{{ item }}"
+        fi
+      args:
+        executable: "/bin/bash"
+      with_items: "{{ container_cache_map.copy_from_host }}"
+      tags:
+        - skip_ansible_lint
+
+    - name: Cached image preparation script
+      copy:
+        content: |
+          #!/usr/bin/env bash
+          set -e -x
+          {{ container_cache_map.cache_prep_commands }}
+        dest: "/var/lib/machines/{{ container_image.name }}/usr/local/bin/cache-prep-commands.sh"
+        mode: "0755"
+
+    - name: Prepare cached image setup commands
+      command: "chroot /var/lib/machines/{{ container_image.name }} /usr/local/bin/cache-prep-commands.sh"
+      changed_when: false
+
+    - name: Adjust sshd configuration in container
+      lineinfile:
+        dest: "/var/lib/machines/{{ container_image.name }}/etc/ssh/sshd_config"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      with_items: "{{ container_sshd_configuration }}"
+
+    - name: Obtain the deploy system's ssh public key
+      set_fact:
+        container_ssh_key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+    - name: Deploy ssh public key into the cached image
+      copy:
+        content: "{{ container_ssh_key }}"
+        dest: "/var/lib/machines/{{ container_image.name }}/root/.ssh/authorized_keys"
+
+    - name: Record the container variant deployed
+      ini_file:
+        dest: "/var/lib/machines/{{ container_image.name }}/etc/ansible/facts.d/openstack_ansible.fact"
+        section: container
+        option: variant
+        value: "{{ container_image.name }}"
+
+  environment: "{{ deployment_environment_variables }}"
+  tags:
+    - nspawn-hosts

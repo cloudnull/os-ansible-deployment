@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "rsyslog"
+    container_bind_mounts: "{{ rsyslog_container_bind_mounts }}"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install rsyslog
   hosts: rsyslog
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -21,11 +29,12 @@
   pre_tasks:
     - include: common-tasks/os-lxc-container-setup.yml
       vars:
-        list_of_bind_mounts:
-          - bind_dir_path: "{{ rsyslog_server_storage_directory }}"
-            mount_path: "/openstack/{{ inventory_hostname }}/log-storage"
+        list_of_bind_mounts: "{{ rsyslog_container_bind_mounts }}"
         extra_container_config_no_restart:
           - "lxc.start.order=99"
+      when:
+        - container_type == 'lxc'
+
     - include: common-tasks/package-cache-proxy.yml
   roles:
     - role: "rsyslog_server"

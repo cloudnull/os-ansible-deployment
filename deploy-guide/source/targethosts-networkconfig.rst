@@ -21,6 +21,10 @@ The following table shows bridges that are to be configured on hosts.
 + br-vlan     +-----------------------+-------------------------------------+
 |             | On every compute node | Never                               |
 +-------------+-----------------------+-------------------------------------+
+|             | On every network node | Optional                            |
++ br-flat     +-----------------------+-------------------------------------+
+|             | On every compute node | Optional                            |
++-------------+-----------------------+-------------------------------------+
 
 For a detailed reference of how the host and container networking is
 implemented, refer to :ref:`network-appendix`.

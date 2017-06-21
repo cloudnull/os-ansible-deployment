@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "cinder_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Prepare MQ/DB services
   hosts: cinder_all
   gather_facts: "{{ gather_facts | default(True) }}"

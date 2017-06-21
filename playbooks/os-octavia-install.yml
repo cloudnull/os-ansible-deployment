@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "octavia_all"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install octavia server
   hosts: octavia_all
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -21,6 +28,8 @@
   pre_tasks:
     - include: common-tasks/os-lxc-container-setup.yml
       static: no
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/rabbitmq-vhost-user.yml
       static: no
       vars:

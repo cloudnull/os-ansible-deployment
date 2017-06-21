@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- include: common-playbooks/nspawn-containers-create.yml
+  vars:
+    container_group: "memcached"
+  when:
+    - container_type == 'nspawn'
+
+
 - name: Install memcached
   hosts: memcached
   gather_facts: "{{ gather_facts | default(True) }}"
@@ -20,6 +27,8 @@
   user: root
   pre_tasks:
     - include: common-tasks/os-lxc-container-setup.yml
+      when:
+        - container_type == 'lxc'
     - include: common-tasks/os-log-dir-setup.yml
       vars:
         log_dirs:
