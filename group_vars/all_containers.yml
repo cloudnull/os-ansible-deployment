@@ -18,7 +18,7 @@
 lxc_container_config_list:
   - "lxc.aa_profile=lxc-openstack"
 
-# Needed by playbooks/common-tasks/os-lxc-container-setup.yml
+# Needed by playbooks/"common-tasks/os-{{ container_tech | default('lxc') }}-container-setup.yml"
 lxc_container_log_path: "/var/log/lxc"
 
 ## Parameters provided to the wait_for_connection module after a container

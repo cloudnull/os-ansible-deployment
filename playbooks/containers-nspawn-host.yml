@@ -1,0 +1,130 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# NOTE(cloudnull): At this time the nspawn implementation piggybacks off of the
+#                  lxc_hosts role. In the future this can be largely
+#                  simplified/removed.
+- include: containers-lxc-host.yml
+  vars:
+    lxc_host_group: "{{ nspawn_host_group | default('nspawn_hosts') }}"
+    lxc_cache_distro_packages: "{{ container_cache_packages }}"
+    lxc_cache_prep_post_commands: "systemctl enable systemd-networkd"
+  tags:
+    - nspawn-host
+
+# NOTE(cloudnull): Create the network interface files the nspawn containers will
+#                  bind to. In the future this should all become part of an
+#                  nspawn host setup role.
+- name: Additional nspawn host setup
+  hosts: "{{ nspawn_host_group | default('nspawn_hosts') }}"
+  gather_facts: true
+  max_fail_percentage: 20
+  user: root
+  handlers:
+    - name: Restart networkd
+      service:
+        name: systemd-networkd
+        state: restarted
+        enabled: true
+  tasks:
+    - name: Create networkd directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /etc/systemd/nspawn
+        - /etc/systemd/network
+
+    - name: Create static MACs
+      copy:
+        content: |
+          [Link]
+          MACAddressPolicy=persistent
+        dest: /etc/systemd/network/99-default.link
+      notify: Restart networkd
+
+    - name: Create Bridge interface(s)
+      copy:
+        content: |
+          [NetDev]
+          Name={{ item.value.bridge }}
+          Kind=bridge
+        dest: "/etc/systemd/network/{{ item.value.bridge }}.netdev"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+
+    - name: Create MACVLAN interface(s)
+      copy:
+        content: |
+          [NetDev]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}
+          Kind=macvlan
+
+          [MACVLAN]
+          Mode=bridge
+        dest: "/etc/systemd/network/{{ 'mv-' + item.value.bridge.split('br-')[-1] }}.netdev"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+
+    - name: Create MACVLAN network(s)
+      copy:
+        content: |
+          [Match]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}
+
+          [Network]
+          DHCP=no
+        dest: "/etc/systemd/network/{{ 'mv-' + item.value.bridge.split('br-')[-1] }}.network"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+
+    - name: Create MACVLAN veth interface(s)
+      copy:
+        content: |
+          [NetDev]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v1
+          Kind=veth
+
+          [Peer]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v2
+        dest: "/etc/systemd/network/{{ 'mv-' + item.value.bridge.split('br-')[-1] }}-vs.netdev"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+
+    - name: Connect veth to bridge interface(s)
+      copy:
+        content: |
+          [Match]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v1
+
+          [Network]
+          Bridge={{ item.value.bridge }}
+        dest: "/etc/systemd/network/{{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v1.network"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+
+    - name: Connect veth to MACVLAN interface(s)
+      copy:
+        content: |
+          [Match]
+          Name={{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v2
+
+          [Network]
+          MACVLAN={{ 'mv-' + item.value.bridge.split('br-')[-1] }}
+        dest: "/etc/systemd/network/{{ 'mv-' + item.value.bridge.split('br-')[-1] }}-v2.network"
+      with_dict: "{{ container_networks | combine(nspawn_networks) }}"
+      notify: Restart networkd
+  tags:
+    - nspawn

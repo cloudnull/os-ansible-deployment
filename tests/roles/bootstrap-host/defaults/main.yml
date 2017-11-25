@@ -236,3 +236,6 @@ bootstrap_host_apt_components:
 # By default the address will be set to the ipv4 address of the
 # host's network interface that has the default route on it.
 #bootstrap_host_public_address: 0.0.0.0
+
+# Set the container technology in service. Options are nspawn and lxc.
+bootstrap_container_tech: "{{ ('nspawn' in bootstrap_host_scenario) | ternary('nspawn', 'lxc') }}"

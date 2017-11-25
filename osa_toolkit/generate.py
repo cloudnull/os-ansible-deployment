@@ -114,8 +114,9 @@ class MissingStaticRouteInfo(Exception):
 
 class LxcHostsDefined(Exception):
     def __init__(self):
-        self.message = ("The group 'lxc_hosts' must not be defined in config;"
-                        " it will be dynamically generated.")
+        self.message = ("The group 'lxc_hosts' or 'nspawn_hosts' must not"
+                        " be defined in config; it will be dynamically "
+                        " generated.")
 
     def __str__(self):
         return self.message
@@ -755,8 +756,8 @@ def populate_lxc_hosts(inventory):
     :param inventory: The dictionary containing the Ansible inventory
     """
     host_nodes = _find_lxc_hosts(inventory)
-    inventory['lxc_hosts'] = {'hosts': host_nodes}
-    logger.debug("Created lxc_hosts group.")
+    inventory['nspawn_hosts'] = inventory['lxc_hosts'] = {'hosts': host_nodes}
+    logger.debug("Created lxc_hosts and nspawn_hosts group.")
 
 
 def _find_lxc_hosts(inventory):
@@ -781,7 +782,8 @@ def _find_lxc_hosts(inventory):
         if not host == physical_host:
             appended = du.append_if(array=host_nodes, item=physical_host)
             if appended:
-                logger.debug("%s added to lxc_hosts group", physical_host)
+                logger.debug("%s added to lxc_hosts and nspawn_hosts group",
+                             physical_host)
     return host_nodes
 
 
@@ -908,7 +910,9 @@ def _check_multiple_ips_to_host(config):
 def _check_lxc_hosts(config):
     if 'lxc_hosts' in config.keys():
         raise LxcHostsDefined()
-    logger.debug("lxc_hosts group not defined")
+    elif 'nspawn_hosts' in config.keys():
+        raise LxcHostsDefined()
+    logger.debug("lxc_hosts or nspawn_hosts group not defined")
 
 
 def _check_group_branches(config, physical_skel):

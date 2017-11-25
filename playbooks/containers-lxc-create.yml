@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Gather lxc container host facts
-  hosts: "{{ lxc_host_group | default('lxc_hosts')}}"
+  hosts: "{{ lxc_host_group | default('lxc_hosts') }}"
   gather_facts: "{{ osa_gather_facts | default(True) }}"
 
 - name: Create container(s)

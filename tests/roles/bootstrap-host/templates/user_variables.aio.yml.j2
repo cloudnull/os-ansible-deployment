@@ -205,3 +205,6 @@ security_rhel7_enable_chrony: no
 nova_service_negate:
   - "nova-agent.service"
   - "nova-resetnetwork.service"
+
+# Set the container tech. Options are "lxc" and "nspawn"
+container_tech: "{{ bootstrap_container_tech }}"

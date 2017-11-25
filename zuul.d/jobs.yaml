@@ -14,12 +14,12 @@
 # limitations under the License.
 
 - job:
-    name: openstack-ansible-deploy-aio
+    name: openstack-ansible-deploy-aio_lxc
     parent: base
     description: |
       Run functional tests for an OpenStack-Ansible project.
       Uses the gate-check-commit.sh script, running a default
-      aio deploy.
+      aio_lxc deploy.
     run: zuul.d/playbooks/run.yml
     timeout: 7200
     irrelevant-files:
@@ -33,31 +33,37 @@
       - ^Vagrantfile
     vars:
       action: deploy
-      scenario: aio
+      scenario: aio_lxc
 
 # ubuntu
 - job:
-    name: openstack-ansible-deploy-aio-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio
+    name: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc
     nodeset: ubuntu-xenial
 - job:
     name: openstack-ansible-deploy-ceph-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
     vars:
       action: deploy
       scenario: ceph
 
 - job:
-    name: openstack-ansible-upgrade-aio-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio-ubuntu-xenial
+    name: openstack-ansible-upgrade-aio_lxc-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
     timeout: 10800
     vars:
       action: upgrade
-      scenario: aio
+      scenario: aio_lxc
+
+- job:
+    name: openstack-ansible-upgrade-aio_nspawn-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_nspawn-ubuntu-xenial
+    vars:
+      scenario: aio_nspawn
 
 - job:
     name: openstack-ansible-upgrade-ceph-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
     timeout: 10800
     vars:
       action: upgrade
@@ -65,43 +71,49 @@
 
 - job:
     name: openstack-ansible-deploy-octavia-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
     vars:
       action: deploy
       scenario: octavia
 
 - job:
     name: openstack-ansible-deploy-translations-ubuntu-xenial
-    parent: openstack-ansible-deploy-aio-ubuntu-xenial
+    parent: openstack-ansible-deploy-aio_lxc-ubuntu-xenial
     vars:
       action: deploy
       scenario: translations
 
 # centos
 - job:
-    name: openstack-ansible-deploy-aio-centos-7
-    parent: openstack-ansible-deploy-aio
+    name: openstack-ansible-deploy-aio_lxc-centos-7
+    parent: openstack-ansible-deploy-aio_lxc
     nodeset: centos-7
     voting: false
 
 - job:
     name: openstack-ansible-deploy-ceph-centos-7
-    parent: openstack-ansible-deploy-aio-centos-7
+    parent: openstack-ansible-deploy-aio_lxc-centos-7
     vars:
       action: deploy
       scenario: ceph
 
 - job:
-    name: openstack-ansible-upgrade-aio-centos-7
-    parent: openstack-ansible-deploy-aio-centos-7
+    name: openstack-ansible-upgrade-aio_lxc-centos-7
+    parent: openstack-ansible-deploy-aio_lxc-centos-7
     timeout: 10800
     vars:
       action: upgrade
-      scenario: aio
+      scenario: aio_lxc
+
+- job:
+    name: openstack-ansible-upgrade-aio_nspawn-centos-7
+    parent: openstack-ansible-deploy-aio_nspawn-centos-7
+    vars:
+      scenario: aio_nspawn
 
 - job:
     name: openstack-ansible-upgrade-ceph-centos-7
-    parent: openstack-ansible-deploy-aio-centos-7
+    parent: openstack-ansible-deploy-aio_lxc-centos-7
     timeout: 10800
     vars:
       action: upgrade
@@ -109,21 +121,28 @@
 
 # opensuse
 - job:
-    name: openstack-ansible-deploy-aio-opensuse-423
-    parent: openstack-ansible-deploy-aio
+    name: openstack-ansible-deploy-aio_lxc-opensuse-423
+    parent: openstack-ansible-deploy-aio_lxc
     nodeset: opensuse-423
     voting: false
 
 - job:
     name: openstack-ansible-deploy-ceph-opensuse-423
-    parent: openstack-ansible-deploy-aio-opensuse-423
+    parent: openstack-ansible-deploy-aio_lxc-opensuse-423
     vars:
       action: deploy
       scenario: ceph
+
 - job:
-    name: openstack-ansible-upgrade-aio-opensuse-423
-    parent: openstack-ansible-deploy-aio-opensuse-423
+    name: openstack-ansible-upgrade-aio_lxc-opensuse-423
+    parent: openstack-ansible-deploy-aio_lxc-opensuse-423
     timeout: 10800
     vars:
       action: upgrade
-      scenario: aio
+      scenario: aio_lxc
+
+- job:
+    name: openstack-ansible-upgrade-aio_nspawn-opensuse-423
+    parent: openstack-ansible-deploy-aio_nspawn-opensuse-423
+    vars:
+      scenario: aio_nspawn

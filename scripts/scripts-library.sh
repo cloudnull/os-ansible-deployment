@@ -263,6 +263,9 @@ function get_instance_info {
   get_repos_info > \
     "/openstack/log/instance-info/host_repo_info_${TS}.log" || true
 
+  journalctl -u post-up-nspawn.service > \
+    "/openstack/log/instance-info/nspawn-networks_${TS}.log" || true
+
   determine_distro
   case ${DISTRO_ID} in
       centos|rhel|fedora|opensuse)

@@ -1,0 +1,66 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Ensure mount directories exists (container)
+  file:
+    path: "{{ item['mount_path'] }}"
+    state: "directory"
+  with_items:
+    - "{{ list_of_bind_mounts | default([]) }}"
+  delegate_to: "{{ physical_host }}"
+  when:
+    - not is_metal | bool
+  tags:
+    - common-nspawn
+
+- name: Ensure mount directories exists (physical host)
+  file:
+    path: "{{ item['bind_dir_path'] }}"
+    state: "directory"
+  with_items:
+    - "{{ list_of_bind_mounts | default([]) }}"
+  when:
+    - not is_metal | bool
+  tags:
+    - common-nspawn
+
+- name: Create container bind mount config
+  lineinfile:
+    dest: "/etc/systemd/nspawn/{{ inventory_hostname }}.nspawn"
+    line: "Bind={{ item['mount_path'] }}:{{ item['bind_dir_path'] }}
+    insertafter: "^Bind"
+    backup: "true"
+  with_items:
+    - "{{ list_of_bind_mounts | default([]) }}"
+  delegate_to: "{{ physical_host }}"
+  register: _ec
+  when: not is_metal | bool
+  tags:
+    - common-nspawn
+
+- name: Restart container
+  systemd:
+    name: "systemd-nspawn@{{ inventory_hostname }}"
+    state: restarted
+  delegate_to: "{{ physical_host }}"
+  notify:
+    - container start
+  tags:
+    - common-nspawn
+
+- name: Wait for container connectivity
+  wait_for_connection:
+    delay: 3
+    timeout: 60

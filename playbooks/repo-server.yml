@@ -27,7 +27,7 @@
       register: _local_git_cache
       when: repo_build_git_cache is defined
 
-    - include: common-tasks/os-lxc-container-setup.yml
+    - include: "common-tasks/os-{{ container_tech | default('lxc') }}-container-setup.yml"
       static: no
       vars:
         list_of_bind_mounts:
@@ -35,7 +35,7 @@
             bind_dir_path: "/var/www"
       when: repo_build_git_cache is not defined or not _local_git_cache.stat.exists
 
-    - include: common-tasks/os-lxc-container-setup.yml
+    - include: "common-tasks/os-{{ container_tech | default('lxc') }}-container-setup.yml"
       static: no
       vars:
         list_of_bind_mounts:
